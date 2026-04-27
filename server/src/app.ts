@@ -11,6 +11,8 @@ import helmet from "helmet";
 import morgan from "morgan";
 import { ENV } from "./utils/env";
 import { connectDB } from "./config/db";
+import errorHandler from "./middlewares/errorHandler";
+import userRoutes from "./routes/user";
 
 const app: Application = express();
 
@@ -41,6 +43,10 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // Routes
+app.use("/api/users", userRoutes);
+
+// global error handler
+app.use(errorHandler);
 
 app.listen(ENV.PORT, () => {
   connectDB();

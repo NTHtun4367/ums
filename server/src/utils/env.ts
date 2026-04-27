@@ -9,4 +9,5 @@ export const ENV = {
   CLIENT_URL: process.env.CLIENT_URL,
   MONGODB_URL: process.env.MONGODB_URL,
   NODE_ENV: process.env.NODE_ENV,
+  JWT_SECRET: process.env.JWT_SECRET,
 };
