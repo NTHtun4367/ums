@@ -13,6 +13,9 @@ import { ENV } from "./utils/env";
 import { connectDB } from "./config/db";
 import errorHandler from "./middlewares/errorHandler";
 import userRoutes from "./routes/user";
+import activitiesLogRoutes from "./routes/activitieslog";
+import academicYearsRoutes from "./routes/academicYear";
+import classRoutes from "./routes/class";
 
 const app: Application = express();
 
@@ -44,6 +47,9 @@ app.get("/", (req: Request, res: Response) => {
 
 // Routes
 app.use("/api/users", userRoutes);
+app.use("/api/activities", activitiesLogRoutes);
+app.use("/api/academic-years", academicYearsRoutes);
+app.use("/api/classes", classRoutes);
 
 // global error handler
 app.use(errorHandler);
