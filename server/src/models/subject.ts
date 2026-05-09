@@ -1,18 +1,22 @@
-import { Schema, Document, Types, model } from "mongoose";
+import { Document, Schema, model, Types } from "mongoose";
 
 export interface ISubject extends Document {
   name: string;
-  code: string;
-  teacher?: Types.ObjectId[]; // Default teacher for this subject
-  isActive: boolean; // Indicates if the subject is currently active
+  code: string; // e.g., CS-101
+  departmentId: Types.ObjectId;
+  semester: number; // 1 to 8
 }
 
 const subjectSchema = new Schema<ISubject>(
   {
     name: { type: String, required: true },
     code: { type: String, required: true, unique: true },
-    teacher: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    isActive: { type: Boolean, default: true },
+    departmentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Department",
+      required: true,
+    },
+    semester: { type: Number, required: true, min: 1, max: 8 },
   },
   { timestamps: true },
 );

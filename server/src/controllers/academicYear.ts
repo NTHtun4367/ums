@@ -9,33 +9,32 @@ import { logActivity } from "../utils/activitieslog";
 // @access Private (Admin only)
 export const createAcademicYear = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const { name, fromYear, toYear, isCurrent } = req.body;
+    const { name, startDate, endDate, isCurrent } = req.body;
 
-    const existingYear = await AcademicYear.findOne({ fromYear, toYear });
+    const existingYear = await AcademicYear.findOne({ startDate, endDate });
 
     if (existingYear) {
       res.status(400);
       throw new Error("Academic Year already exists!");
     }
 
-    // if isCurrent is true, set all others academic years to false
+    // If this year is set as current, unset any existing current year
     if (isCurrent) {
-      await AcademicYear.updateMany(
-        { _id: { $ne: null } },
-        { isCurrent: false },
-      );
+      await AcademicYear.updateMany({}, { isCurrent: false });
     }
 
     const academicYear = await AcademicYear.create({
       name,
-      fromYear,
-      toYear,
+      startDate,
+      endDate,
       isCurrent: isCurrent || false,
     });
 
+    // Use userId field to match Activity Log Schema v1
     await logActivity({
-      user: req.user?._id.toString()!,
-      action: `Created academic year ${name}`,
+      userId: req.user?._id.toString()!,
+      action: "Created Academic Year",
+      details: `Name: ${name} (${startDate}-${endDate})`,
     });
 
     res.status(201).json(academicYear);
@@ -52,8 +51,6 @@ export const getAllAcademicYears = asyncHandler(
     const skip = (page - 1) * limit;
 
     const search = req.query.search;
-
-    // query -> search by name
     const query: any = {};
 
     if (search) {
@@ -61,8 +58,11 @@ export const getAllAcademicYears = asyncHandler(
     }
 
     const [total, years] = await Promise.all([
-      AcademicYear.countDocuments(),
-      AcademicYear.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      AcademicYear.countDocuments(query),
+      AcademicYear.find(query)
+        .sort({ startDate: -1 }) // Sort by year descending
+        .skip(skip)
+        .limit(limit),
     ]);
 
     res.status(200).json({
@@ -78,7 +78,7 @@ export const getAllAcademicYears = asyncHandler(
 );
 
 // @desc Get the current active academic year
-// @route POST /api/academic-years/current
+// @route GET /api/academic-years/current
 // @access Public
 export const getCurrentAcademicYear = asyncHandler(
   async (req: Request, res: Response) => {
@@ -86,7 +86,7 @@ export const getCurrentAcademicYear = asyncHandler(
 
     if (!currentYear) {
       res.status(404);
-      throw new Error("No current academic year found!");
+      throw new Error("No current active academic year found!");
     }
 
     res.status(200).json(currentYear);
@@ -100,6 +100,7 @@ export const updateAcademicYear = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { isCurrent } = req.body;
 
+    // If being updated to current, unset others
     if (isCurrent) {
       await AcademicYear.updateMany(
         { _id: { $ne: req.params.id } },
@@ -110,7 +111,7 @@ export const updateAcademicYear = asyncHandler(
     const updatedYear = await AcademicYear.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { returnDocument: "after", runValidators: true },
+      { new: true, runValidators: true },
     );
 
     if (!updatedYear) {
@@ -119,8 +120,9 @@ export const updateAcademicYear = asyncHandler(
     }
 
     await logActivity({
-      user: req.user?._id.toString()!,
-      action: `Updated academic year ${updatedYear.name}`,
+      userId: req.user?._id.toString()!,
+      action: "Updated Academic Year",
+      details: `Updated info for ${updatedYear.name}`,
     });
 
     res.status(200).json(updatedYear);
@@ -139,16 +141,20 @@ export const deleteAcademicYear = asyncHandler(
       throw new Error("Academic Year not found!");
     }
 
+    // Safety check: Cannot delete the active year
     if (year.isCurrent) {
       res.status(400);
-      throw new Error("Can't delete the current Academic Year!");
+      throw new Error(
+        "Active current academic year cannot be deleted. Set another year as current first.",
+      );
     }
 
     await year.deleteOne();
 
     await logActivity({
-      user: req.user?._id.toString()!,
-      action: `Deleted academic year ${year.name}`,
+      userId: req.user?._id.toString()!,
+      action: "Deleted Academic Year",
+      details: `Deleted: ${year.name}`,
     });
 
     res.status(200).json({ message: "Academic Year deleted successfully!" });

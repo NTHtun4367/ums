@@ -1,17 +1,24 @@
 import { ActivitiesLog } from "../models/activitieslog";
+import { Types } from "mongoose";
 
+// Utility to log system activities
 export const logActivity = async ({
-  user,
+  userId,
   action,
   details,
 }: {
-  user: string;
+  userId: string;
   action: string;
   details?: string;
 }) => {
   try {
-    await ActivitiesLog.create({ user, action, details });
+    await ActivitiesLog.create({
+      userId: new Types.ObjectId(userId),
+      action,
+      details,
+    });
   } catch (error) {
-    console.error("Failed to log activity:", error);
+    // Silently log error to console so it doesn't crash the main request flow
+    console.error("CRITICAL: Failed to save activity log:", error);
   }
 };

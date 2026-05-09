@@ -7,15 +7,19 @@ import {
   getCurrentAcademicYear,
   updateAcademicYear,
 } from "../controllers/academicYear";
+import { UserRole } from "../models/user";
 
 const router = Router();
 
 router.use(protect);
 
-router.post("/create", authorize(["admin"]), createAcademicYear);
-router.patch("/update/:id", authorize(["admin"]), updateAcademicYear);
-router.delete("/delete/:id", authorize(["admin"]), deleteAcademicYear);
 router.get("/current", getCurrentAcademicYear);
-router.get("/current", authorize(["admin"]), getAllAcademicYears);
+
+// Management: Admin only
+router.use(authorize([UserRole.ADMIN]));
+router.post("/create", createAcademicYear);
+router.patch("/update/:id", updateAcademicYear);
+router.delete("/delete/:id", deleteAcademicYear);
+router.get("/", getAllAcademicYears);
 
 export default router;

@@ -1,52 +1,51 @@
-import { Document, model, Schema } from "mongoose";
+import { Document, model, Schema, Types } from "mongoose";
 import bcrypt from "bcrypt";
 
 export enum UserRole {
   ADMIN = "admin",
+  HOD = "hod",
   TEACHER = "teacher",
   STUDENT = "student",
-  PARENT = "parent",
 }
-
-export type userRoles = "admin" | "teacher" | "student" | "parent";
 
 export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  role: userRoles;
+  role: UserRole;
   isActive: boolean;
-  studentClass?: string | null;
-  teacherSubject?: string[] | null;
+  phone: string;
+  gender: "male" | "female" | "other";
+  departmentId?: Types.ObjectId; // For HODs/Teachers/Students
+  // Student Specific
+  classId?: Types.ObjectId;
+  rollNo?: string;
+  admissionDate?: Date;
   matchPassword: (enteredPassword: string) => Promise<boolean>;
 }
 
 const userSchema = new Schema<IUser>(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
-    role: {
-      type: String,
-      enum: Object.values(UserRole),
-      required: true,
-      default: UserRole.STUDENT,
-    },
+    role: { type: String, enum: Object.values(UserRole), required: true },
     isActive: { type: Boolean, default: true },
-    studentClass: { type: Schema.Types.ObjectId, ref: "Class" },
-    teacherSubject: [{ type: Schema.Types.ObjectId, ref: "Subject" }],
+    phone: { type: String, required: true },
+    gender: { type: String, enum: ["male", "female", "other"], required: true },
+    departmentId: { type: Schema.Types.ObjectId, ref: "Department" },
+    classId: { type: Schema.Types.ObjectId, ref: "Class" },
+    rollNo: { type: String },
+    admissionDate: { type: Date, default: Date.now },
   },
   { timestamps: true },
 );
 
-// pre-save middleware to hash password
 userSchema.pre<IUser>("save", async function () {
   if (!this.isModified("password")) return;
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  this.password = await bcrypt.hash(this.password, await bcrypt.genSalt(10));
 });
 
-// method to match entered password with hashed password
 userSchema.methods.matchPassword = async function (enteredPassword: string) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

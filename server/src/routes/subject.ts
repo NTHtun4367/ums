@@ -3,17 +3,21 @@ import { authorize, protect } from "../middlewares/auth";
 import {
   createSubject,
   deleteSubject,
-  getAllSubjects,
+  getSubjects,
   updateSubject,
 } from "../controllers/subject";
+import { UserRole } from "../models/user";
 
 const router = Router();
 
 router.use(protect);
 
-router.post("/create", authorize(["admin"]), createSubject);
-router.get("/", authorize(["admin", "teacher"]), getAllSubjects);
-router.patch("/update/:id", authorize(["admin"]), updateSubject);
-router.delete("/delete/:id", authorize(["admin"]), deleteSubject);
+// Management: Admin only
+router.post("/create", authorize([UserRole.ADMIN]), createSubject);
+router.patch("/update/:id", authorize([UserRole.ADMIN]), updateSubject);
+router.delete("/delete/:id", authorize([UserRole.ADMIN]), deleteSubject);
+
+// View: Admin and Teacher
+router.get("/", authorize([UserRole.ADMIN, UserRole.TEACHER]), getSubjects);
 
 export default router;

@@ -5,95 +5,84 @@ import { Subject } from "../models/subject";
 import { logActivity } from "../utils/activitieslog";
 
 // @desc Create a new subject
-// @route POST /api/subjects/create
-// @access Private (Admin only)
 export const createSubject = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const { name, code, teacher, isActive } = req.body;
+    const { name, code, departmentId, semester } = req.body;
 
     const existingSubject = await Subject.findOne({ code });
-
     if (existingSubject) {
       res.status(400);
-      throw new Error("Subject code already exists!");
+      throw new Error("Subject with this code already exists.");
     }
 
-    const newSubject = await Subject.create({
+    const subject = await Subject.create({
       name,
       code,
-      teacher: Array.isArray(teacher) ? teacher : [],
-      isActive,
+      departmentId,
+      semester,
     });
 
-    if (newSubject) {
-      await logActivity({
-        user: req.user?._id.toString()!,
-        action: `Created subject: ${newSubject.name}`,
-      });
+    await logActivity({
+      userId: req.user?._id.toString()!,
+      action: "Created Subject",
+      details: `Created subject: ${name} (${code})`,
+    });
 
-      res.status(201).json(newSubject);
-    }
+    res.status(201).json(subject);
   },
 );
 
 // @desc Get all subjects
-// @route GET /api/subjects
-// @access Private (Admin only)
-export const getAllSubjects = asyncHandler(
+export const getSubjects = asyncHandler(async (req: Request, res: Response) => {
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const { search, departmentId, semester } = req.query;
+
+  const query: any = {};
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { code: { $regex: search, $options: "i" } },
+    ];
+  }
+  if (departmentId) query.departmentId = departmentId;
+  if (semester) query.semester = semester;
+
+  const [total, subjects] = await Promise.all([
+    Subject.countDocuments(query),
+    Subject.find(query)
+      .populate("departmentId", "name code")
+      .skip((page - 1) * limit)
+      .limit(limit),
+  ]);
+
+  res.status(200).json({
+    subjects,
+    pagination: { page, pages: Math.ceil(total / limit), total, limit },
+  });
+});
+
+// @desc Get single subject
+export const getSubjectById = asyncHandler(
   async (req: Request, res: Response) => {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const search = req.query.search;
-
-    const query: any = {};
-
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { code: { $regex: search, $options: "i" } },
-      ];
+    const subject = await Subject.findById(req.params.id).populate(
+      "departmentId",
+    );
+    if (!subject) {
+      res.status(404);
+      throw new Error("Subject not found!");
     }
-
-    // fetch subjects with pagination & filtering
-    const [total, subjects] = await Promise.all([
-      Subject.countDocuments(query),
-      Subject.find(query)
-        .populate("teacher", "name email")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
-    ]);
-
-    res.status(200).json({
-      subjects,
-      pagination: {
-        page,
-        pages: Math.ceil(total / limit),
-        total,
-        limit,
-      },
-    });
+    res.status(200).json(subject);
   },
 );
 
 // @desc Update subject
-// @route PATCH /api/subjects/update/:id
-// @access Private (Admin only)
 export const updateSubject = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const { name, code, teacher, isActive } = req.body;
-
     const updatedSubject = await Subject.findByIdAndUpdate(
       req.params.id,
-      {
-        name,
-        code,
-        teacher: Array.isArray(teacher) ? teacher : [],
-        isActive,
-      },
-      { returnDocument: "after", runValidators: true },
+      req.body,
+      { new: true, runValidators: true },
     );
 
     if (!updatedSubject) {
@@ -102,31 +91,31 @@ export const updateSubject = asyncHandler(
     }
 
     await logActivity({
-      user: req.user?._id.toString()!,
-      action: `Updated subject: ${updatedSubject.name}`,
+      userId: req.user?._id.toString()!,
+      action: "Updated Subject",
+      details: `Updated info for subject: ${updatedSubject.name}`,
     });
 
-    res.status(201).json(updatedSubject);
+    res.status(200).json(updatedSubject);
   },
 );
 
 // @desc Delete subject
-// @route DELETE /api/subjects/delete/:id
-// @access Private (Admin only)
 export const deleteSubject = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const deletedSubject = await Subject.findByIdAndDelete(req.params.id);
+    const subject = await Subject.findByIdAndDelete(req.params.id);
 
-    if (!deletedSubject) {
+    if (!subject) {
       res.status(404);
       throw new Error("Subject not found!");
     }
 
     await logActivity({
-      user: req.user?._id.toString()!,
-      action: `Deleted subject: ${deletedSubject.name}`,
+      userId: req.user?._id.toString()!,
+      action: "Deleted Subject",
+      details: `Deleted subject: ${subject.name}`,
     });
 
-    res.status(201).json({ message: "Subject deleted successfully!" });
+    res.status(200).json({ message: "Subject deleted successfully!" });
   },
 );

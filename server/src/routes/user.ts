@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   deleteUser,
-  getUserProfile,
+  getUserById,
   getUsers,
   login,
   logoutUser,
@@ -9,25 +9,26 @@ import {
   updateUser,
 } from "../controllers/user";
 import { authorize, protect } from "../middlewares/auth";
+import { UserRole } from "../models/user";
 
 const router = Router();
 
-router.post("/register", protect, authorize(["admin", "teacher"]), register);
+// Public routes
 router.post("/login", login);
 router.post("/logout", logoutUser);
-router.get("/profile", protect, getUserProfile);
-router.get("/", protect, authorize(["admin", "teacher"]), getUsers);
-router.patch(
-  "/update/:id",
-  protect,
-  authorize(["admin", "teacher"]),
-  updateUser,
-);
-router.delete(
-  "/delete/:id",
-  protect,
-  authorize(["admin", "teacher"]),
-  deleteUser,
-);
+
+// Protected routes
+router.use(protect);
+
+// Profile is accessible by the user themselves or staff
+router.get("/profile/:id", getUserById);
+
+// Staff-only management routes
+router.use(authorize([UserRole.ADMIN, UserRole.TEACHER]));
+
+router.post("/register", register);
+router.get("/", getUsers);
+router.patch("/update/:id", updateUser);
+router.delete("/delete/:id", deleteUser);
 
 export default router;

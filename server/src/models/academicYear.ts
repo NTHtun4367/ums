@@ -1,17 +1,17 @@
 import { Document, model, Schema } from "mongoose";
 
 export interface IAcademicYear extends Document {
-  name: string; // "2025-2026"
-  fromYear: Date; // 2025-12-01
-  toYear: Date; // 2026-03-26
+  name: string; // e.g., "2025-2026"
+  startDate: Date;
+  endDate: Date;
   isCurrent: boolean;
 }
 
 const academicYearSchema = new Schema<IAcademicYear>(
   {
-    name: { type: String, required: true },
-    fromYear: { type: Date, required: true },
-    toYear: { type: Date, required: true },
+    name: { type: String, required: true, unique: true },
+    startDate: { type: Date, required: true },
+    endDate: { type: Date, required: true },
     isCurrent: { type: Boolean, default: false },
   },
   { timestamps: true },

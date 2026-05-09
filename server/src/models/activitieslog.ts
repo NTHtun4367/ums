@@ -1,19 +1,30 @@
 import { Document, model, Schema, Types } from "mongoose";
 
 export interface IActivitiesLog extends Document {
-  user: Types.ObjectId; // Who did it?
-  action: string; // "Registered Student", "Created Exam"
-  details?: string;
+  userId: Types.ObjectId; // Reference to the user who performed the action
+  action: string; // Descriptive name of the action (e.g., "Created Class")
+  details?: string; // Optional additional information about the change
   createdAt: Date;
 }
 
 const activitiesLogSchema = new Schema<IActivitiesLog>(
   {
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    action: { type: String, required: true },
-    details: { type: String },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    action: {
+      type: String,
+      required: true,
+    },
+    details: {
+      type: String,
+    },
   },
-  { timestamps: true },
+  {
+    timestamps: { createdAt: true, updatedAt: false }, // Only need the creation time for logs
+  },
 );
 
 export const ActivitiesLog = model<IActivitiesLog>(

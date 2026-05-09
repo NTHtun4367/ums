@@ -6,10 +6,12 @@ import {
   getClasses,
   updateClass,
 } from "../controllers/class";
+import { UserRole } from "../models/user";
 
 const router = Router();
 
-router.use(protect, authorize(["admin"]));
+router.use(protect);
+router.use(authorize([UserRole.ADMIN]));
 
 router.post("/create", createClass);
 router.get("/", getClasses);
