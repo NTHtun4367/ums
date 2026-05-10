@@ -3,11 +3,24 @@ import { apiSlice } from "./api";
 
 export const academicYearApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getAcademicYears: builder.query<any, { page: number; search?: string }>({
-      query: ({ page, search }) => ({
+    // Get all academic years (Admin only)
+    getAcademicYears: builder.query<
+      any,
+      { page: number; search?: string; limit?: number }
+    >({
+      query: ({ page, search, limit = 10 }) => ({
         url: "/academic-years",
         method: "GET",
-        params: { page, limit: 10, search },
+        params: { page, limit, search },
+      }),
+      providesTags: ["AcademicYear"],
+    }),
+
+    // Get the current academic year (All authenticated users)
+    getCurrentAcademicYear: builder.query<any, void>({
+      query: () => ({
+        url: "/academic-years/current",
+        method: "GET",
       }),
       providesTags: ["AcademicYear"],
     }),
@@ -48,6 +61,7 @@ export const academicYearApi = apiSlice.injectEndpoints({
 
 export const {
   useGetAcademicYearsQuery,
+  useGetCurrentAcademicYearQuery,
   useCreateAcademicYearMutation,
   useUpdateAcademicYearMutation,
   useDeleteAcademicYearMutation,

@@ -9,23 +9,18 @@ interface LoginInput {
 export const userApi = apiSlice.injectEndpoints({
   overrideExisting: false,
   endpoints: (builder) => ({
-    // --- User Management Endpoints ---
-
-    // Get Users with Filters
     getUsers: builder.query<
       { users: User[]; pagination: Pagination },
-      { page: number; limit: number; role: UserRole; search?: string }
+      { page: number; limit: number; role?: UserRole | "all"; search?: string }
     >({
-      query: ({ page, limit, role, search }) => {
-        let url = `/users?page=${page}&limit=${limit}&role=${role}`;
-        if (search) url += `&search=${search}`;
-        return url;
-      },
+      query: ({ page, limit, role, search }) => ({
+        url: "/users",
+        params: { page, limit, role, search },
+      }),
       providesTags: ["User"],
     }),
 
-    // Create User
-    createUser: builder.mutation<User, Partial<User>>({
+    createUser: builder.mutation<User & { message: string }, Partial<User>>({
       query: (data) => ({
         url: "/users/register",
         method: "POST",
@@ -34,8 +29,10 @@ export const userApi = apiSlice.injectEndpoints({
       invalidatesTags: ["User"],
     }),
 
-    // Update User
-    updateUser: builder.mutation<User, { id: string; data: Partial<User> }>({
+    updateUser: builder.mutation<
+      User & { message: string },
+      { id: string; data: Partial<User> }
+    >({
       query: ({ id, data }) => ({
         url: `/users/update/${id}`,
         method: "PATCH",
@@ -44,8 +41,7 @@ export const userApi = apiSlice.injectEndpoints({
       invalidatesTags: ["User"],
     }),
 
-    // Delete User
-    deleteUser: builder.mutation<{ success: boolean }, string>({
+    deleteUser: builder.mutation<{ message: string }, string>({
       query: (id) => ({
         url: `/users/delete/${id}`,
         method: "DELETE",
@@ -53,10 +49,7 @@ export const userApi = apiSlice.injectEndpoints({
       invalidatesTags: ["User"],
     }),
 
-    // --- Authentication & Profile Endpoints ---
-
-    // User Login
-    login: builder.mutation<any, LoginInput>({
+    login: builder.mutation<User, LoginInput>({
       query: (data) => ({
         url: "/users/login",
         method: "POST",
@@ -65,17 +58,12 @@ export const userApi = apiSlice.injectEndpoints({
       invalidatesTags: ["User"],
     }),
 
-    // Get Current User Profile
     getMe: builder.query<User, void>({
-      query: () => ({
-        url: "/users/profile",
-        method: "GET",
-      }),
+      query: () => "/users/me",
       providesTags: ["User"],
     }),
 
-    // User Logout
-    logout: builder.mutation<any, void>({
+    logout: builder.mutation<{ message: string }, void>({
       query: () => ({
         url: "/users/logout",
         method: "POST",

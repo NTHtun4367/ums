@@ -9,15 +9,15 @@ export const classApi = apiSlice.injectEndpoints({
       { classes: Class[]; pagination: Pagination },
       { page: number; limit: number; search?: string }
     >({
-      query: ({ page, limit, search }) => {
-        let url = `/classes?page=${page}&limit=${limit}`;
-        if (search) url += `&search=${search}`;
-        return url;
-      },
+      query: ({ page, limit, search }) => ({
+        url: "/classes",
+        method: "GET",
+        params: { page, limit, search: search || undefined },
+      }),
       providesTags: ["Class"],
     }),
 
-    // Get Single Class
+    // Get Single Class (Admin Only per backend)
     getClassById: builder.query<Class, string>({
       query: (id) => `/classes/${id}`,
       providesTags: (result, error, id) => [{ type: "Class", id }],

@@ -1,4 +1,4 @@
-import type { Schedule } from "@/types/type";
+import type { Timetable, Pagination } from "@/types/type";
 import { apiSlice } from "./api";
 
 export interface GenSettings {
@@ -10,13 +10,25 @@ export interface GenSettings {
 export const timetableApi = apiSlice.injectEndpoints({
   overrideExisting: false,
   endpoints: (builder) => ({
-    // get timetable by class
-    getTimetableByClass: builder.query<{ schedule: Schedule[] }, string>({
-      query: (classId) => `/timetables/${classId}`,
+    // Get all timetables (Admin/Teacher)
+    getAllTimetables: builder.query<
+      { timetables: Timetable[]; pagination: Pagination },
+      { page: number; limit: number }
+    >({
+      query: ({ page, limit }) => ({
+        url: "/timetables",
+        params: { page, limit },
+      }),
+      providesTags: ["Timetable"],
+    }),
+
+    // Get timetable by class - FIXED PATH to /class/:id
+    getTimetableByClass: builder.query<Timetable, string>({
+      query: (classId) => `/timetables/class/${classId}`,
       providesTags: (result, error, id) => [{ type: "Timetable", id }],
     }),
 
-    // generate timetable with AI
+    // Generate timetable with AI
     generateTimetable: builder.mutation<
       { message: string },
       { classId: string; academicYearId: string; settings: GenSettings }
@@ -26,9 +38,16 @@ export const timetableApi = apiSlice.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: (result, error, { classId }) => [
-        { type: "Timetable", id: classId },
-      ],
+      invalidatesTags: ["Timetable"],
+    }),
+
+    // Delete Timetable
+    deleteTimetable: builder.mutation<{ message: string }, string>({
+      query: (id) => ({
+        url: `/timetables/delete/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Timetable"],
     }),
 
     getInitialData: builder.query<{ classes: any[]; years: any[] }, void>({
@@ -53,7 +72,9 @@ export const timetableApi = apiSlice.injectEndpoints({
 });
 
 export const {
+  useGetAllTimetablesQuery,
   useGetTimetableByClassQuery,
   useGenerateTimetableMutation,
+  useDeleteTimetableMutation,
   useGetInitialDataQuery,
 } = timetableApi;

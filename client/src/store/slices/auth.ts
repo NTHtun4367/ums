@@ -1,20 +1,16 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-
-interface UserInfo {
-  _id: string;
-  name?: string;
-  email?: string;
-}
+import type { User } from "@/types/type";
 
 interface AuthState {
-  userInfo: UserInfo | null;
+  // Use the central User type to ensure consistency across the app
+  userInfo: User | null;
 }
 
-const getInitialUserInfo = (): UserInfo | null => {
+const getInitialUserInfo = (): User | null => {
   try {
     const saved = localStorage.getItem("userInfo");
     if (!saved) return null;
-    return JSON.parse(saved) as UserInfo;
+    return JSON.parse(saved) as User;
   } catch (error) {
     console.error("Failed to parse userInfo from localStorage:", error);
     return null;
@@ -29,7 +25,7 @@ export const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setUserInfo: (state, action: PayloadAction<UserInfo>) => {
+    setUserInfo: (state, action: PayloadAction<User>) => {
       state.userInfo = action.payload;
       localStorage.setItem("userInfo", JSON.stringify(action.payload));
     },

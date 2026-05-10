@@ -14,6 +14,15 @@ export const apiSlice = createApi({
       return headers;
     },
   }),
-  tagTypes: ["User", "AcademicYear", "Class", "Subject", "Timetable"],
+  tagTypes: [
+    "User",
+    "AcademicYear",
+    "Class",
+    "Department",
+    "Subject",
+    "Timetable",
+    "Attendance",
+    "Activities",
+  ],
   endpoints: () => ({}),
 });

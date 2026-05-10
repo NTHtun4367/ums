@@ -11,6 +11,7 @@ export const subjectApi = apiSlice.injectEndpoints({
     >({
       query: ({ page, limit, search }) => ({
         url: "/subjects",
+        method: "GET",
         params: { page, limit, search: search || undefined },
       }),
       providesTags: ["Subject"],
