@@ -7,61 +7,44 @@ import {
 } from "lucide-react";
 
 export const SIDEBAR_CONFIG = {
-  user: {
-    name: "Admin User",
-    email: "admin@university.edu",
-    avatar: "/avatars/admin.jpg",
-  },
   header: {
     name: "Aston University",
     logo: School,
-    plan: "University Edition",
+    plan: "Management Portal",
   },
   navMain: [
     {
       title: "Dashboard",
       url: "/dashboard",
       icon: LayoutDashboard,
-      isActive: true,
-      roles: ["admin", "teacher", "student", "parent"],
-      items: [
-        {
-          title: "Main Dashboard",
-          url: "/dashboard",
-          roles: ["admin", "teacher", "student", "parent"],
-        },
-        {
-          title: "Activities Log",
-          url: "/activies-log",
-          roles: ["admin"],
-        },
-      ],
+      roles: ["admin", "teacher", "student", "hod"],
+      items: [{ title: "Overview", url: "/dashboard" }],
     },
     {
       title: "Academics",
       url: "#",
       icon: School,
-      roles: ["admin", "teacher", "student", "parent"],
+      roles: ["admin", "teacher", "student", "hod"],
       items: [
+        {
+          title: "Departments",
+          url: "/departments",
+          roles: ["admin", "teacher", "hod"],
+        },
         {
           title: "Classes",
           url: "/classes",
-          roles: ["admin", "teacher"],
+          roles: ["admin", "teacher", "hod"],
         },
         {
           title: "Subjects",
           url: "/subjects",
-          roles: ["admin", "teacher"],
+          roles: ["admin", "teacher", "hod"],
         },
         {
           title: "Timetable",
           url: "/timetable",
-          roles: ["admin", "teacher", "student", "parent"],
-        },
-        {
-          title: "Attendance",
-          url: "/attendance",
-          roles: ["admin", "teacher", "student", "parent"],
+          roles: ["admin", "teacher", "student", "hod"],
         },
       ],
     },
@@ -69,24 +52,11 @@ export const SIDEBAR_CONFIG = {
       title: "People",
       url: "#",
       icon: Users,
-      roles: ["admin", "teacher"],
+      roles: ["admin", "hod"],
       items: [
-        { title: "Students", url: "/users/students" },
-        {
-          title: "Teachers",
-          url: "/users/teachers",
-          roles: ["admin"],
-        },
-        {
-          title: "Parents",
-          url: "/users/parents",
-          roles: ["admin"],
-        },
-        {
-          title: "Admins",
-          url: "/users/admins",
-          roles: ["admin"],
-        },
+        { title: "Students", url: "/users/students", roles: ["admin", "hod"] },
+        { title: "Teachers", url: "/users/teachers", roles: ["admin", "hod"] },
+        { title: "Admins", url: "/users/admins", roles: ["admin"] },
       ],
     },
     {
@@ -95,20 +65,22 @@ export const SIDEBAR_CONFIG = {
       icon: Banknote,
       roles: ["admin"],
       items: [
-        { title: "Fee Collection", url: "/finance/fees" },
-        { title: "Expenses", url: "/finance/expenses" },
-        { title: "Salary", url: "/finance/salary" },
+        { title: "Fees", url: "/finance/fees", roles: ["admin"] },
+        { title: "Salary", url: "/finance/salary", roles: ["admin"] },
       ],
     },
     {
-      title: "System",
+      title: "Settings",
       url: "#",
       icon: Settings2,
       roles: ["admin"],
       items: [
-        { title: "General Settings", url: "/settings/general" },
-        { title: "Academic Years", url: "/settings/academic-years" },
-        { title: "Roles & Permissions", url: "/settings/roles" },
+        {
+          title: "Academic Years",
+          url: "/settings/academic-years",
+          roles: ["admin"],
+        },
+        { title: "General", url: "/settings/general", roles: ["admin"] },
       ],
     },
   ],
