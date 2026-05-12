@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-interface CustomModelProps {
+interface CustomModalProps {
   title: string;
   description: string;
   open: boolean;
@@ -14,24 +14,27 @@ interface CustomModelProps {
   children: React.ReactNode;
 }
 
-function CustomModel({
+function CustomModal({
   description,
   open,
   setOpen,
   title,
   children,
-}: CustomModelProps) {
+}: CustomModalProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+      {/* Increased width to 2xl for the two-column design and set max-h */}
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="p-6 pb-2">
+          <DialogTitle className="text-xl font-bold">{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <div className="py-4">{children}</div>
+
+        {/* Container for the form with padding */}
+        <div className="flex-1 overflow-y-auto px-6 pb-6">{children}</div>
       </DialogContent>
     </Dialog>
   );
 }
 
-export default CustomModel;
+export default CustomModal;
