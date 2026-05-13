@@ -7,12 +7,12 @@ export const subjectApi = apiSlice.injectEndpoints({
     // Get Subjects with Pagination & Search
     getSubjects: builder.query<
       { subjects: Subject[]; pagination: Pagination },
-      { page: number; limit: number; search?: string }
+      { page: number; limit: number; search?: string; departmentId?: string }
     >({
-      query: ({ page, limit, search }) => ({
+      query: ({ page, limit, search, departmentId }) => ({
         url: "/subjects",
         method: "GET",
-        params: { page, limit, search: search || undefined },
+        params: { page, limit, search: search || undefined, departmentId },
       }),
       providesTags: ["Subject"],
     }),

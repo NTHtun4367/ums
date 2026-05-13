@@ -11,11 +11,35 @@ export const userApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getUsers: builder.query<
       { users: User[]; pagination: Pagination },
-      { page: number; limit: number; role?: UserRole | "all"; search?: string }
+      {
+        page: number;
+        limit: number;
+        role?: UserRole | "all";
+        search?: string;
+        departmentId?: string;
+        teacherStatus?: string;
+        classId?: string; // ADD THIS
+      }
     >({
-      query: ({ page, limit, role, search }) => ({
+      query: ({
+        page,
+        limit,
+        role,
+        search,
+        departmentId,
+        teacherStatus,
+        classId,
+      }) => ({
         url: "/users",
-        params: { page, limit, role, search },
+        params: {
+          page,
+          limit,
+          role,
+          search,
+          departmentId: departmentId || undefined,
+          teacherStatus: teacherStatus || undefined,
+          classId: classId || undefined, // ADD THIS
+        },
       }),
       providesTags: ["User"],
     }),
