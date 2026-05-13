@@ -1,3 +1,4 @@
+// @/components/academic-year/academic-year-form.tsx
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,33 +59,33 @@ function AcademicYearForm({ open, onOpenChange, initialData }: Props) {
       if (initialData) {
         form.reset({
           name: initialData.name,
-          fromYear: new Date(initialData.fromYear),
-          toYear: new Date(initialData.toYear),
+          startDate: new Date(initialData.startDate),
+          endDate: new Date(initialData.endDate),
           isCurrent: initialData.isCurrent,
         });
       } else {
         form.reset({
           name: "",
-          fromYear: undefined,
-          toYear: undefined,
+          startDate: undefined,
+          endDate: undefined,
           isCurrent: false,
         });
       }
     }
   }, [initialData, form, open]);
 
-  const onSubmit = async (data: AcademicYearFormValues) => {
+  const onSubmit = async (values: AcademicYearFormValues) => {
     try {
       if (initialData) {
-        await updateYear({ id: initialData._id, data }).unwrap();
-        toast.success("Academic year updated");
+        await updateYear({ id: initialData._id, data: values }).unwrap();
+        toast.success("Academic year updated successfully");
       } else {
-        await createYear(data).unwrap();
-        toast.success("Academic year created");
+        await createYear(values).unwrap();
+        toast.success("Academic year created successfully");
       }
       onOpenChange(false);
     } catch (error: any) {
-      toast.error(error.data?.message || "Failed to save academic year");
+      toast.error(error.data?.message || "Something went wrong");
     }
   };
 
@@ -95,23 +96,21 @@ function AcademicYearForm({ open, onOpenChange, initialData }: Props) {
       open={open}
       setOpen={onOpenChange}
       title={initialData ? "Edit Year" : "New Academic Year"}
-      description="Set the duration for this session."
+      description="Define the period for this academic session."
     >
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <FieldGroup className="space-y-6">
-          {/* Year Name Input */}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FieldGroup className="space-y-4">
           <CustomInput
             control={form.control}
             name="name"
             label="Year Name"
-            placeholder="e.g. 2026-2027"
+            placeholder="e.g. 2025-2026"
             disabled={isPending}
           />
 
-          {/* Date Pickers Grid */}
           <div className="grid grid-cols-2 gap-4">
             <Controller
-              name="fromYear"
+              name="startDate"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field className="flex flex-col gap-2">
@@ -120,11 +119,11 @@ function AcademicYearForm({ open, onOpenChange, initialData }: Props) {
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        disabled={isPending}
                         className={cn(
-                          "w-full pl-3 text-left font-normal h-10",
+                          "w-full pl-3 text-left font-normal",
                           !field.value && "text-muted-foreground",
                         )}
+                        disabled={isPending}
                       >
                         {field.value ? (
                           format(field.value, "PPP")
@@ -139,12 +138,12 @@ function AcademicYearForm({ open, onOpenChange, initialData }: Props) {
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        autoFocus
+                        initialFocus
                       />
                     </PopoverContent>
                   </Popover>
                   {fieldState.error && (
-                    <FieldError className="text-destructive text-xs">
+                    <FieldError className="text-xs">
                       {fieldState.error.message}
                     </FieldError>
                   )}
@@ -153,7 +152,7 @@ function AcademicYearForm({ open, onOpenChange, initialData }: Props) {
             />
 
             <Controller
-              name="toYear"
+              name="endDate"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field className="flex flex-col gap-2">
@@ -162,11 +161,11 @@ function AcademicYearForm({ open, onOpenChange, initialData }: Props) {
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        disabled={isPending}
                         className={cn(
-                          "w-full pl-3 text-left font-normal h-10",
+                          "w-full pl-3 text-left font-normal",
                           !field.value && "text-muted-foreground",
                         )}
+                        disabled={isPending}
                       >
                         {field.value ? (
                           format(field.value, "PPP")
@@ -182,14 +181,15 @@ function AcademicYearForm({ open, onOpenChange, initialData }: Props) {
                         selected={field.value}
                         onSelect={field.onChange}
                         disabled={(date) =>
-                          !!form.getValues("fromYear") &&
-                          date < form.getValues("fromYear")
+                          !!form.getValues("startDate") &&
+                          date < form.getValues("startDate")
                         }
+                        initialFocus
                       />
                     </PopoverContent>
                   </Popover>
                   {fieldState.error && (
-                    <FieldError className="text-destructive text-xs">
+                    <FieldError className="text-xs">
                       {fieldState.error.message}
                     </FieldError>
                   )}
@@ -198,28 +198,26 @@ function AcademicYearForm({ open, onOpenChange, initialData }: Props) {
             />
           </div>
 
-          {/* Checkbox Section */}
           <Controller
             name="isCurrent"
             control={form.control}
             render={({ field: { value, onChange } }) => (
-              <div className="flex items-start space-x-3 space-y-0 rounded-md border p-4 bg-muted/20">
+              <div className="flex items-center space-x-3 rounded-md border p-4 bg-muted/20">
                 <Checkbox
                   id="isCurrent"
                   checked={value}
                   onCheckedChange={onChange}
                   disabled={isPending}
-                  className="mt-1"
                 />
-                <div className="grid gap-1.5 leading-none">
+                <div className="grid gap-1 leading-none">
                   <label
                     htmlFor="isCurrent"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    className="text-sm font-medium cursor-pointer"
                   >
-                    Set as Active
+                    Set as Current Session
                   </label>
                   <p className="text-xs text-muted-foreground">
-                    Automatically deactivates others.
+                    This will become the primary year for data entry.
                   </p>
                 </div>
               </div>
@@ -227,8 +225,12 @@ function AcademicYearForm({ open, onOpenChange, initialData }: Props) {
           />
         </FieldGroup>
 
-        <Button type="submit" disabled={isPending} className="w-full mt-6">
-          {isPending ? "Saving..." : "Save Changes"}
+        <Button type="submit" disabled={isPending} className="w-full">
+          {isPending
+            ? "Processing..."
+            : initialData
+              ? "Update Academic Year"
+              : "Create Academic Year"}
         </Button>
       </form>
     </CustomModal>

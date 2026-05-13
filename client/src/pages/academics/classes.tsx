@@ -1,7 +1,5 @@
-// @/pages/classes/page.tsx
-"use client";
-
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux"; // Added for Redux state
 import { toast } from "sonner";
 import { Plus, GraduationCap } from "lucide-react";
 
@@ -11,17 +9,23 @@ import {
 } from "@/store/slices/classApi";
 import { Button } from "@/components/ui/button";
 import type { Class } from "@/types/type";
+import type { RootState } from "@/store"; // Ensure you import your RootState type
 import Search from "@/components/common/custom-search";
 import ClassTable from "@/components/classes/class-table";
 import ClassForm from "@/components/classes/class-form";
 import CustomAlert from "@/components/common/custom-alert";
 
 const Classes = () => {
+  // 1. Get user info from Redux store
+  const userInfo = useSelector((state: RootState) => state.auth.userInfo);
+
   const [search, setSearch] = useState("");
   const [queryParams, setQueryParams] = useState({
     page: 1,
     limit: 10,
     search: "",
+    // 2. Initialize with departmentId if user is restricted to a department
+    departmentId: userInfo?.departmentId || "",
   });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -29,9 +33,18 @@ const Classes = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data, isLoading, isFetching } = useGetClassesQuery(queryParams);
+  // 3. The hook now automatically includes departmentId in the request
+  const { data, isLoading, isFetching } = useGetClassesQuery({
+    ...queryParams,
+    departmentId:
+      (userInfo?.departmentId as string) ||
+      (queryParams.departmentId as string) ||
+      undefined,
+  });
+
   const [deleteClass, { isLoading: isDeleting }] = useDeleteClassMutation();
 
+  // Handle search debouncing
   useEffect(() => {
     const handler = setTimeout(() => {
       setQueryParams((prev) => ({ ...prev, search, page: 1 }));
@@ -61,8 +74,9 @@ const Classes = () => {
             <h1 className="text-3xl font-bold tracking-tight">Classes</h1>
           </div>
           <p className="text-muted-foreground">
-            Configure class sessions, semester levels, and teacher-student
-            ratios.
+            {userInfo?.departmentId
+              ? `Managing classes for your department.`
+              : "Configure class sessions, semester levels, and teacher-student ratios."}
           </p>
         </div>
         <div className="flex gap-2 items-center">

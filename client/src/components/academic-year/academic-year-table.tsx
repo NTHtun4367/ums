@@ -75,12 +75,12 @@ const AcademicYearTable = memo(
                 <TableRow key={year._id}>
                   <TableCell className="font-medium">{year.name}</TableCell>
                   <TableCell>
-                    {year.fromYear
-                      ? format(new Date(year.fromYear), "PPP")
+                    {year.startDate
+                      ? format(new Date(year.startDate), "PPP")
                       : "-"}
                   </TableCell>
                   <TableCell>
-                    {year.toYear ? format(new Date(year.toYear), "PPP") : "-"}
+                    {year.endDate ? format(new Date(year.endDate), "PPP") : "-"}
                   </TableCell>
                   <TableCell>
                     <Badge
