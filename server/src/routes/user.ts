@@ -5,26 +5,33 @@ import {
   getUsers,
   login,
   logoutUser,
-  register,
   updateUser,
+  getMe,
+  register, // Ensure this is imported for the session check
 } from "../controllers/user";
 import { authorize, protect } from "../middlewares/auth";
 import { UserRole } from "../models/user";
 
 const router = Router();
 
-// Public routes
+// --- Public Routes ---
 router.post("/login", login);
 router.post("/logout", logoutUser);
 
-// Protected routes
+// --- Protected Routes (Login Required) ---
 router.use(protect);
 
-// Profile is accessible by the user themselves or staff
+// 1. Session Verification Route
+// Used by useGetMeQuery to verify the user is still active in the DB
+router.get("/me", getMe);
+
+// 2. Profile Access
+// Accessible by the user themselves or staff
 router.get("/profile/:id", getUserById);
 
-// Staff-only management routes
-router.use(authorize([UserRole.ADMIN, UserRole.TEACHER]));
+// --- Staff-Only Management Routes ---
+// Requires ADMIN or TEACHER role
+router.use(authorize([UserRole.ADMIN, UserRole.HOD, UserRole.TEACHER]));
 
 router.post("/register", register);
 router.get("/", getUsers);

@@ -8,6 +8,14 @@ export enum UserRole {
   STUDENT = "student",
 }
 
+// Added an enum for Teacher Status to ensure data consistency
+export enum TeacherStatus {
+  PROFESSOR = "professor",
+  ASSISTANT_PROFESSOR = "assistant_professor",
+  LECTURER = "lecturer",
+  TUTOR = "tutor",
+}
+
 export interface IUser extends Document {
   name: string;
   email: string;
@@ -17,6 +25,10 @@ export interface IUser extends Document {
   phone: string;
   gender: "male" | "female" | "other";
   departmentId?: Types.ObjectId; // For HODs/Teachers/Students
+
+  // Teacher Specific (Newly Added)
+  teacherStatus?: TeacherStatus;
+
   // Student Specific
   classId?: Types.ObjectId;
   rollNo?: string;
@@ -34,6 +46,14 @@ const userSchema = new Schema<IUser>(
     phone: { type: String, required: true },
     gender: { type: String, enum: ["male", "female", "other"], required: true },
     departmentId: { type: Schema.Types.ObjectId, ref: "Department" },
+
+    // Teacher Specific Field
+    teacherStatus: {
+      type: String,
+      enum: Object.values(TeacherStatus),
+    },
+
+    // Student Specific Fields
     classId: { type: Schema.Types.ObjectId, ref: "Class" },
     rollNo: { type: String },
     admissionDate: { type: Date, default: Date.now },
