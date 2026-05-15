@@ -29,7 +29,7 @@ export const SIDEBAR_CONFIG = {
         {
           title: "Departments",
           url: "/departments",
-          roles: ["admin", "teacher", "hod"],
+          roles: ["admin"],
         },
         {
           title: "Classes",
@@ -56,6 +56,7 @@ export const SIDEBAR_CONFIG = {
       items: [
         { title: "Students", url: "/users/students", roles: ["admin", "hod"] },
         { title: "Teachers", url: "/users/teachers", roles: ["admin", "hod"] },
+        { title: "Heads of Dept", url: "/users/hods", roles: ["admin"] },
         { title: "Admins", url: "/users/admins", roles: ["admin"] },
       ],
     },
