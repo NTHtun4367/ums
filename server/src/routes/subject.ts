@@ -11,13 +11,12 @@ import { UserRole } from "../models/user";
 const router = Router();
 
 router.use(protect);
+router.use(authorize([UserRole.ADMIN, UserRole.HOD, UserRole.TEACHER]));
 
 // Management: Admin only
-router.post("/create", authorize([UserRole.ADMIN]), createSubject);
-router.patch("/update/:id", authorize([UserRole.ADMIN]), updateSubject);
-router.delete("/delete/:id", authorize([UserRole.ADMIN]), deleteSubject);
-
-// View: Admin and Teacher
-router.get("/", authorize([UserRole.ADMIN, UserRole.TEACHER]), getSubjects);
+router.post("/create", createSubject);
+router.patch("/update/:id", updateSubject);
+router.delete("/delete/:id", deleteSubject);
+router.get("/", getSubjects);
 
 export default router;
