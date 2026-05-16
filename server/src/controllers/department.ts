@@ -3,6 +3,7 @@ import { AuthRequest } from "../middlewares/auth";
 import asyncHandler from "../utils/asyncHandler";
 import { Department } from "../models/department";
 import { logActivity } from "../utils/activitieslog";
+import { Types } from "mongoose";
 
 // @desc Create a new department
 // @route POST /api/departments/create
@@ -23,7 +24,7 @@ export const createDepartment = asyncHandler(
       name,
       code,
       description,
-      headId,
+      headId: headId ? new Types.ObjectId(headId) : undefined,
     });
 
     await logActivity({

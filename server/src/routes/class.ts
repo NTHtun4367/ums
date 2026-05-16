@@ -11,7 +11,7 @@ import { UserRole } from "../models/user";
 const router = Router();
 
 router.use(protect);
-router.use(authorize([UserRole.ADMIN]));
+router.use(authorize([UserRole.ADMIN, UserRole.HOD, UserRole.TEACHER]));
 
 router.post("/create", createClass);
 router.get("/", getClasses);
