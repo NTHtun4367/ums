@@ -18,6 +18,7 @@ const AcademicYearPage = () => {
   const [queryParams, setQueryParams] = useState({
     page: 1,
     search: "",
+    limit: 10,
   });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -31,12 +32,8 @@ const AcademicYearPage = () => {
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setQueryParams((prev) => {
-        if (prev.search === search) return prev;
-        return { ...prev, search: search, page: 1 };
-      });
+      setQueryParams((prev) => ({ ...prev, search, page: 1 }));
     }, 500);
-
     return () => clearTimeout(handler);
   }, [search]);
 
@@ -44,57 +41,61 @@ const AcademicYearPage = () => {
     setQueryParams((prev) => ({ ...prev, page: newPage }));
   }, []);
 
-  const handleCreate = useCallback(() => {
+  const handleCreate = () => {
     setEditingYear(null);
     setIsFormOpen(true);
-  }, []);
+  };
 
-  const handleEdit = useCallback((year: AcademicYear) => {
+  const handleEdit = (year: AcademicYear) => {
     setEditingYear(year);
     setIsFormOpen(true);
-  }, []);
+  };
 
-  const handleDeleteClick = useCallback((id: string) => {
+  const handleDeleteClick = (id: string) => {
     setDeletingId(id);
     setIsAlertOpen(true);
-  }, []);
+  };
 
   const confirmDelete = async () => {
     if (!deletingId) return;
     try {
       await deleteAcademicYear(deletingId).unwrap();
-      toast.success("Academic year deleted");
+      toast.success("Session deleted successfully");
       setIsAlertOpen(false);
     } catch (error: any) {
-      toast.error(error.data?.message || "Failed to delete");
+      toast.error(error.data?.message || "Delete failed");
     } finally {
       setDeletingId(null);
     }
   };
 
-  const academicYears = useMemo(() => data?.years || [], [data?.years]);
+  const years = useMemo(() => data?.years || [], [data?.years]);
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Academic Years</h1>
-          <p className="text-muted-foreground">Manage school sessions.</p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Academic Sessions
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Configure your school's active periods and history.
+          </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
           <CustomSearch
             search={search}
             setSearch={setSearch}
-            title="Academic Year"
+            title="Search sessions..."
           />
           <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" /> Add New Year
+            <Plus className="mr-2 h-4 w-4" /> Add Year
           </Button>
         </div>
       </div>
 
       <AcademicYearTable
-        data={academicYears}
+        data={years}
         loading={isLoading || isFetching}
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
@@ -110,12 +111,12 @@ const AcademicYearPage = () => {
       />
 
       <CustomAlert
-        handleDelete={confirmDelete}
         isOpen={isAlertOpen}
         setIsOpen={setIsAlertOpen}
         loading={isDeleting}
-        title="Delete Academic Year"
-        description="Are you sure you want to delete this session? This cannot be undone."
+        handleDelete={confirmDelete}
+        title="Delete Session"
+        description="Are you sure? This will remove all associations with this academic year."
       />
     </div>
   );

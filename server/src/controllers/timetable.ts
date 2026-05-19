@@ -1,100 +1,60 @@
+// controllers/timetable.ts
 import { Request, Response } from "express";
-import { AuthRequest } from "../middlewares/auth";
+import { Types } from "mongoose";
 import asyncHandler from "../utils/asyncHandler";
-import { inngest } from "../inngest";
-import { logActivity } from "../utils/activitieslog";
 import { Timetable } from "../models/timetable";
 
-// @desc Generate a timetable using AI
-// @route POST /api/timetables/generate
-// @access Private (Admin only)
-export const generateTimetable = asyncHandler(
-  async (req: AuthRequest, res: Response) => {
-    const { classId, academicYearId, settings } = req.body;
-
-    if (!classId || !academicYearId) {
-      res.status(400);
-      throw new Error("Class ID and Academic Year ID are required.");
-    }
-
-    // Trigger background AI Job via Inngest
-    await inngest.send({
-      name: "generate/timetable",
-      data: { classId, academicYearId, settings },
-    });
-
-    await logActivity({
-      userId: req.user?._id.toString()!,
-      action: "Triggered AI Timetable Generation",
-      details: `Initiated generation for Class ID: ${classId}`,
-    });
-
-    res
-      .status(202)
-      .json({ message: "Timetable generation initiated in the background!" });
-  },
-);
-
-// @desc Get all timetables (Pagination)
-// @route GET /api/timetables
-export const getAllTimetables = asyncHandler(
+// @desc Save or Update timetable for a specific day
+// @route POST /api/timetables
+export const saveTimetable = asyncHandler(
   async (req: Request, res: Response) => {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+    const { classId, day, periods } = req.body;
 
-    const [total, timetables] = await Promise.all([
-      Timetable.countDocuments(),
-      Timetable.find()
-        .populate("classId", "name")
-        .populate("academicYearId", "name")
-        .skip(skip)
-        .limit(limit)
-        .sort({ createdAt: -1 }),
-    ]);
+    const updatedTimetable = await Timetable.findOneAndUpdate(
+      { classId: new Types.ObjectId(classId), day },
+      {
+        classId,
+        day,
+        periods: periods.map((p: any) => ({
+          ...p,
+          subjectId: new Types.ObjectId(p.subjectId),
+          teacherId: new Types.ObjectId(p.teacherId),
+        })),
+      },
+      { upsert: true, new: true, runValidators: true },
+    );
 
     res.status(200).json({
-      timetables,
-      pagination: { page, pages: Math.ceil(total / limit), total, limit },
+      success: true,
+      data: updatedTimetable,
     });
   },
 );
 
-// @desc Get timetable by class
+// @desc Get full weekly timetable for a class
 // @route GET /api/timetables/class/:classId
-export const getTimetableByClass = asyncHandler(
+export const getClassTimetable = asyncHandler(
   async (req: Request, res: Response) => {
-    const timetable = await Timetable.findOne({ classId: req.params.classId })
-      .populate("schedule.periods.subjectId", "name code")
-      .populate("schedule.periods.teacherId", "name email")
-      .populate("academicYearId", "name");
+    const { classId } = req.params;
 
-    if (!timetable) {
-      res.status(404);
-      throw new Error("Timetable not found for this class!");
-    }
+    const timetable = await Timetable.find({
+      classId: new Types.ObjectId(classId as string),
+    })
+      .populate("periods.subjectId", "name code")
+      .populate("periods.teacherId", "name email");
 
-    res.status(200).json(timetable);
+    res.status(200).json({
+      success: true,
+      data: timetable,
+    });
   },
 );
 
-// @desc Delete a timetable
-// @route DELETE /api/timetables/delete/:id
-export const deleteTimetable = asyncHandler(
-  async (req: AuthRequest, res: Response) => {
-    const timetable = await Timetable.findByIdAndDelete(req.params.id);
-
-    if (!timetable) {
-      res.status(404);
-      throw new Error("Timetable not found!");
-    }
-
-    await logActivity({
-      userId: req.user?._id.toString()!,
-      action: "Deleted Timetable",
-      details: `Removed timetable for Class ID: ${timetable.classId}`,
-    });
-
-    res.status(200).json({ message: "Timetable deleted successfully!" });
+// @desc Delete a specific day's timetable
+// @route DELETE /api/timetables/:id
+export const deleteTimetableDay = asyncHandler(
+  async (req: Request, res: Response) => {
+    await Timetable.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: "Day schedule removed" });
   },
 );

@@ -1,48 +1,32 @@
+// routes/timetable.ts
 import { Router } from "express";
-import { authorize, protect } from "../middlewares/auth";
-import {
-  generateTimetable,
-  getAllTimetables,
-  getTimetableByClass,
-  deleteTimetable,
-} from "../controllers/timetable";
+import { protect, authorize } from "../middlewares/auth";
 import { UserRole } from "../models/user";
+import {
+  saveTimetable,
+  getClassTimetable,
+  deleteTimetableDay,
+} from "../controllers/timetable";
 
 const router = Router();
 
-// Global Middleware: All timetable operations require a logged-in user
 router.use(protect);
 
-/**
- * @desc    Generate a timetable using AI
- * @access  Private (Admin only)
- */
-router.post("/generate", authorize([UserRole.ADMIN]), generateTimetable);
+// Admin and Teachers can manage timetables
+router
+  .route("/")
+  .post(authorize([UserRole.ADMIN, UserRole.TEACHER]), saveTimetable);
 
-/**
- * @desc    Get all timetables with pagination
- * @access  Private (Admin and Teacher)
- */
-router.get(
-  "/",
-  authorize([UserRole.ADMIN, UserRole.TEACHER]),
-  getAllTimetables,
-);
+router
+  .route("/:id")
+  .delete(authorize([UserRole.ADMIN, UserRole.TEACHER]), deleteTimetableDay);
 
-/**
- * @desc    Get timetable by class ID
- * @access  Private (Admin, Teacher, and Student)
- */
-router.get(
-  "/class/:classId",
-  authorize([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT]),
-  getTimetableByClass,
-);
-
-/**
- * @desc    Delete a specific timetable
- * @access  Private (Admin only)
- */
-router.delete("/delete/:id", authorize([UserRole.ADMIN]), deleteTimetable);
+// Everyone (Admin, Teacher, Student) can view the timetable
+router
+  .route("/class/:classId")
+  .get(
+    authorize([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT]),
+    getClassTimetable,
+  );
 
 export default router;
