@@ -14,12 +14,12 @@ const router = Router();
 router.use(protect);
 
 router.get("/current", getCurrentAcademicYear);
+router.get("/", getAllAcademicYears);
 
 // Management: Admin only
 router.use(authorize([UserRole.ADMIN]));
 router.post("/create", createAcademicYear);
 router.patch("/update/:id", updateAcademicYear);
 router.delete("/delete/:id", deleteAcademicYear);
-router.get("/", getAllAcademicYears);
 
 export default router;

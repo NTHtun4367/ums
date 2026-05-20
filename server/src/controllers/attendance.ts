@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import asyncHandler from "../utils/asyncHandler";
 import { Attendance } from "../models/attendance";
-import mongoose from "mongoose";
 
 /**
  * @desc    Mark or Update attendance (Bulk or Single)
