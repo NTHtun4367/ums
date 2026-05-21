@@ -4,6 +4,7 @@ export interface ISubject extends Document {
   name: string;
   code: string; // e.g., CS-101
   departmentId: Types.ObjectId;
+  classId: Types.ObjectId;
   semester: number; // 1 to 8
 }
 
@@ -16,6 +17,7 @@ const subjectSchema = new Schema<ISubject>(
       ref: "Department",
       required: true,
     },
+    classId: { type: Schema.Types.ObjectId, ref: "Class", required: true },
     semester: { type: Number, required: true, min: 1, max: 8 },
   },
   { timestamps: true },

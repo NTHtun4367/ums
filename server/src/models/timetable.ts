@@ -3,8 +3,8 @@ import { Schema, Document, Types, model } from "mongoose";
 export interface IPeriod {
   subjectId: Types.ObjectId;
   teacherId: Types.ObjectId;
-  startTime: string; // "09:00"
-  endTime: string; // "10:00"
+  startTime: string; // "08:30"
+  endTime: string; // "09:30"
   room: string; // Room/Lab Name
 }
 
