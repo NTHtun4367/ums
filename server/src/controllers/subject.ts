@@ -4,129 +4,192 @@ import asyncHandler from "../utils/asyncHandler";
 import { Subject } from "../models/subject";
 import { logActivity } from "../utils/activitieslog";
 
-// @desc Create a new subject
+// @desc Create Subject
+// @route POST /api/subjects/create
+// @access Private
+
 export const createSubject = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    // FIXED: Added classId here
     const { name, code, departmentId, classId, semester } = req.body;
 
-    // Validate classId presence
-    if (!classId) {
-      res.status(400);
-      throw new Error("Class ID is required to create a subject.");
-    }
+    const existingSubject = await Subject.findOne({
+      code: code.toUpperCase(),
+      departmentId,
+    });
 
-    const existingSubject = await Subject.findOne({ code });
     if (existingSubject) {
       res.status(400);
-      throw new Error("Subject with this code already exists.");
+      throw new Error("Subject already exists in this department");
     }
 
     const subject = await Subject.create({
       name,
-      code,
+      code: code.toUpperCase(),
       departmentId,
-      classId, // FIXED: Persisted classId to MongoDB
+      classId,
       semester,
     });
 
     await logActivity({
       userId: req.user?._id.toString()!,
       action: "Created Subject",
-      details: `Created subject: ${name} (${code})`,
+      details: `Created subject ${subject.name} (${subject.code})`,
     });
 
     res.status(201).json(subject);
   },
 );
 
-// @desc Get all subjects
+// @desc Get Subjects
+// @route GET /api/subjects
+// @access Private
+
 export const getSubjects = asyncHandler(async (req: Request, res: Response) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
-  // FIXED: Destructured classId from request queries
+
+  const skip = (page - 1) * limit;
+
   const { search, departmentId, classId, semester } = req.query;
 
-  const query: any = {};
+  const filters: any = {};
+
+  if (departmentId) {
+    filters.departmentId = departmentId;
+  }
+
+  if (classId) {
+    filters.classId = classId;
+  }
+
+  if (semester) {
+    filters.semester = Number(semester);
+  }
+
   if (search) {
-    query.$or = [
-      { name: { $regex: search, $options: "i" } },
-      { code: { $regex: search, $options: "i" } },
+    filters.$or = [
+      {
+        name: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+      {
+        code: {
+          $regex: search,
+          $options: "i",
+        },
+      },
     ];
   }
-  if (departmentId) query.departmentId = departmentId;
-  if (classId) query.classId = classId; // FIXED: Applied classId query match
-  if (semester) query.semester = semester;
 
-  const [total, subjects] = await Promise.all([
-    Subject.countDocuments(query),
-    Subject.find(query)
+  const [subjects, total] = await Promise.all([
+    Subject.find(filters)
       .populate("departmentId", "name code")
-      .populate("classId", "name") // Optional helper population
-      .skip((page - 1) * limit)
+      .populate("classId", "name semester")
+      .sort({ createdAt: -1 })
+      .skip(skip)
       .limit(limit),
+
+    Subject.countDocuments(filters),
   ]);
 
   res.status(200).json({
     subjects,
-    pagination: { page, pages: Math.ceil(total / limit), total, limit },
+    pagination: {
+      page,
+      pages: Math.ceil(total / limit),
+      total,
+      limit,
+    },
   });
 });
 
-// @desc Get single subject
+// @desc Get Subject By ID
+// @route GET /api/subjects/:id
+// @access Private
+
 export const getSubjectById = asyncHandler(
   async (req: Request, res: Response) => {
     const subject = await Subject.findById(req.params.id)
-      .populate("departmentId")
-      .populate("classId"); // Added class populate safety
+      .populate("departmentId", "name code")
+      .populate("classId", "name semester");
+
     if (!subject) {
       res.status(404);
-      throw new Error("Subject not found!");
+      throw new Error("Subject not found");
     }
+
     res.status(200).json(subject);
   },
 );
 
-// @desc Update subject
+// @desc Update Subject
+// @route PATCH /api/subjects/update/:id
+// @access Private
+
 export const updateSubject = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const updatedSubject = await Subject.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true },
-    );
+    const subject = await Subject.findById(req.params.id);
 
-    if (!updatedSubject) {
+    if (!subject) {
       res.status(404);
-      throw new Error("Subject not found!");
+      throw new Error("Subject not found");
     }
+
+    if (req.body.code) {
+      req.body.code = req.body.code.toUpperCase();
+    }
+
+    const duplicateSubject = await Subject.findOne({
+      _id: { $ne: req.params.id },
+      code: req.body.code || subject.code,
+      departmentId: req.body.departmentId || subject.departmentId,
+    });
+
+    if (duplicateSubject) {
+      res.status(400);
+      throw new Error("Another subject already uses this code");
+    }
+
+    Object.assign(subject, req.body);
+
+    await subject.save();
 
     await logActivity({
       userId: req.user?._id.toString()!,
       action: "Updated Subject",
-      details: `Updated info for subject: ${updatedSubject.name}`,
+      details: `Updated subject ${subject.name}`,
     });
 
-    res.status(200).json(updatedSubject);
+    res.status(200).json(subject);
   },
 );
 
-// @desc Delete subject
+// @desc Delete Subject
+// @route DELETE /api/subjects/delete/:id
+// @access Private
+
 export const deleteSubject = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const subject = await Subject.findByIdAndDelete(req.params.id);
+    const subject = await Subject.findById(req.params.id);
 
     if (!subject) {
       res.status(404);
-      throw new Error("Subject not found!");
+      throw new Error("Subject not found");
     }
+
+    await subject.deleteOne();
 
     await logActivity({
       userId: req.user?._id.toString()!,
       action: "Deleted Subject",
-      details: `Deleted subject: ${subject.name}`,
+      details: `Deleted subject ${subject.name}`,
     });
 
-    res.status(200).json({ message: "Subject deleted successfully!" });
+    res.status(200).json({
+      success: true,
+      message: "Subject deleted successfully",
+    });
   },
 );

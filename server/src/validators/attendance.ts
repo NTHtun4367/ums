@@ -1,5 +1,6 @@
 import { body } from "express-validator";
 import { isValidObjectId } from "./common";
+import { AttendanceStatus } from "../models/attendance";
 
 export const validateAttendance = [
   body("studentId")
@@ -7,36 +8,54 @@ export const validateAttendance = [
     .notEmpty()
     .withMessage("Student ID is required")
     .custom(isValidObjectId),
+
   body("classId")
     .trim()
     .notEmpty()
     .withMessage("Class ID is required")
     .custom(isValidObjectId),
+
   body("subjectId")
     .trim()
     .notEmpty()
     .withMessage("Subject ID is required")
     .custom(isValidObjectId),
+
+  body("teacherId")
+    .trim()
+    .notEmpty()
+    .withMessage("Teacher ID is required")
+    .custom(isValidObjectId),
+
   body("academicYearId")
     .trim()
     .notEmpty()
     .withMessage("Academic Year ID is required")
     .custom(isValidObjectId),
-  body("date")
+
+  body("attendanceDate")
     .notEmpty()
     .withMessage("Attendance date is required")
     .isISO8601()
-    .withMessage("Date must be a valid ISO 8601 timestamp")
+    .withMessage("Attendance date must be valid")
     .toDate(),
+
+  body("sessionNumber")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Session number must be greater than 0")
+    .toInt(),
+
   body("status")
     .trim()
     .notEmpty()
     .withMessage("Attendance status is required")
-    .isIn(["present", "absent", "late", "excused"])
-    .withMessage("Status must be either: present, absent, late, or excused"),
-  body("markedBy")
+    .isIn(Object.values(AttendanceStatus))
+    .withMessage("Invalid attendance status"),
+
+  body("remarks")
+    .optional()
     .trim()
-    .notEmpty()
-    .withMessage("Marking Teacher ID reference is required")
-    .custom(isValidObjectId),
+    .isLength({ max: 300 })
+    .withMessage("Remarks cannot exceed 300 characters"),
 ];

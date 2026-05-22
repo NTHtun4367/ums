@@ -2,17 +2,26 @@ import { body } from "express-validator";
 import { isValidObjectId } from "./common";
 
 export const validateDepartment = [
-  body("name").trim().notEmpty().withMessage("Department name is required"),
+  body("name")
+    .trim()
+    .notEmpty()
+    .withMessage("Department name is required")
+    .isLength({ min: 2, max: 100 })
+    .withMessage("Department name must be between 2 and 100 characters"),
+
   body("code")
     .trim()
     .notEmpty()
-    .withMessage("Department code is required (e.g., CSE)")
+    .withMessage("Department code is required")
     .isLength({ min: 2, max: 10 })
-    .withMessage("Code must be between 2 and 10 characters long"),
+    .withMessage("Department code must be between 2 and 10 characters")
+    .toUpperCase(),
+
   body("description")
     .optional()
     .trim()
     .isLength({ max: 500 })
     .withMessage("Description cannot exceed 500 characters"),
-  body("headId").optional({ checkFalsy: true }).trim().custom(isValidObjectId),
+
+  body("headId").optional({ checkFalsy: true }).custom(isValidObjectId),
 ];

@@ -2,90 +2,98 @@ import { body } from "express-validator";
 import { isValidObjectId } from "./common";
 
 export const validateUser = [
-  body("name")
-    .trim()
-    .notEmpty()
-    .withMessage("User full profile identification name parameter is required"),
+  body("name").optional().trim().notEmpty().withMessage("Name is required"),
+
   body("email")
+    .optional()
     .trim()
-    .notEmpty()
-    .withMessage("Email parameter tracking identifier required")
     .isEmail()
-    .withMessage("Must provide a format-adherent electronic address structure")
+    .withMessage("Valid email is required")
     .normalizeEmail(),
+
   body("password")
-    .notEmpty()
-    .withMessage("Authentication credentials passkey is required")
+    .optional()
     .isLength({ min: 6 })
-    .withMessage(
-      "Secret authentication passphrase must meet structural length requirements of at least 6 characters",
-    ),
+    .withMessage("Password must be at least 6 characters"),
+
   body("role")
-    .trim()
-    .notEmpty()
-    .withMessage("System routing role validation attribute required")
+    .optional()
     .isIn(["admin", "hod", "teacher", "student"])
-    .withMessage("Unauthorized structural tier access assignment attempt"),
+    .withMessage("Invalid role"),
+
   body("isActive")
     .optional()
     .isBoolean()
-    .withMessage(
-      "Status toggle configurations must map explicitly to true or false fields",
-    )
-    .toBoolean(),
+    .withMessage("isActive must be boolean"),
+
   body("phone")
+    .optional()
     .trim()
     .notEmpty()
-    .withMessage("Active contact telephone registry link string is required"),
+    .withMessage("Phone number is required"),
+
   body("gender")
-    .trim()
-    .notEmpty()
-    .withMessage("Biological gender mapping reference field is required")
+    .optional()
     .isIn(["male", "female", "other"])
-    .withMessage("Select an applicable mapping alternative frame"),
+    .withMessage("Invalid gender"),
+
   body("departmentId")
-    .optional({ checkFalsy: true })
-    .trim()
-    .custom(isValidObjectId),
-  body("teacherStatus").custom((value, { req }) => {
-    if (req.body.role === "teacher" || req.body.role === "hod") {
-      const structuralTiers = [
-        "professor",
-        "assistant_professor",
-        "lecturer",
-        "tutor",
-      ];
-      if (!value || !structuralTiers.includes(value)) {
-        throw new Error(
-          "Academic staff ranking status descriptor must be declared accurately for teachers/HODs",
-        );
+    .optional({ nullable: true })
+    .custom((value) => {
+      if (value) {
+        return isValidObjectId(value);
       }
-    }
-    return true;
-  }),
-  body("classId").custom((value, { req }) => {
-    if (req.body.role === "student") {
-      if (!value)
-        throw new Error(
-          "Assigned operational group class assignment reference is required for students",
-        );
-      return isValidObjectId(value);
-    }
-    return true;
-  }),
-  body("rollNo").custom((value, { req }) => {
-    if (req.body.role === "student" && (!value || value.trim() === "")) {
-      throw new Error(
-        "Student tracking matrix ledger sequence code (Roll No) is required",
-      );
-    }
-    return true;
-  }),
+      return true;
+    }),
+
+  body("teacherStatus")
+    .optional()
+    .custom((value, { req }) => {
+      if (req.body.role === "teacher" || req.body.role === "hod") {
+        const statuses = [
+          "professor",
+          "assistant_professor",
+          "lecturer",
+          "tutor",
+        ];
+
+        if (!statuses.includes(value)) {
+          throw new Error("Invalid teacher status");
+        }
+      }
+
+      return true;
+    }),
+
+  body("classId")
+    .optional()
+    .custom((value, { req }) => {
+      if (req.body.role === "student") {
+        if (!value) {
+          throw new Error("classId is required for students");
+        }
+
+        return isValidObjectId(value);
+      }
+
+      return true;
+    }),
+
+  body("rollNo")
+    .optional()
+    .custom((value, { req }) => {
+      if (req.body.role === "student") {
+        if (!value || value.trim() === "") {
+          throw new Error("Roll number is required");
+        }
+      }
+
+      return true;
+    }),
+
   body("admissionDate")
     .optional()
     .isISO8601()
-    .withMessage(
-      "Admission date tracking context must adhere to format specifications",
-    )
+    .withMessage("Invalid admission date")
     .toDate(),
 ];

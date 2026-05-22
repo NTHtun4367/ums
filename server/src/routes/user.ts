@@ -9,15 +9,20 @@ import {
   getMe,
   register,
 } from "../controllers/user";
+
 import { authorize, protect } from "../middlewares/auth";
 import { UserRole } from "../models/user";
+
 import { validateUser, validateMongoIdParam } from "../validators";
+
 import { validateRequest } from "../middlewares/validate";
+
 import { body } from "express-validator";
 
 const router = Router();
 
-// --- Public Routes ---
+// PUBLIC ROUTES
+
 router.post(
   "/login",
   [
@@ -27,6 +32,7 @@ router.post(
       .withMessage("Email is required")
       .isEmail()
       .withMessage("Invalid email format"),
+
     body("password").notEmpty().withMessage("Password is required"),
   ],
   validateRequest,
@@ -35,13 +41,12 @@ router.post(
 
 router.post("/logout", logoutUser);
 
-// --- Protected Routes (Login Required) ---
+// PROTECTED ROUTES
+
 router.use(protect);
 
-// 1. Session Verification Route
 router.get("/me", getMe);
 
-// 2. Profile Access
 router.get(
   "/profile/:id",
   validateMongoIdParam("id"),
@@ -49,7 +54,8 @@ router.get(
   getUserById,
 );
 
-// --- Staff-Only Management Routes ---
+// STAFF ROUTES
+
 router.use(authorize([UserRole.ADMIN, UserRole.HOD, UserRole.TEACHER]));
 
 router.post("/register", validateUser, validateRequest, register);

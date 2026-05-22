@@ -8,7 +8,6 @@ export enum UserRole {
   STUDENT = "student",
 }
 
-// Added an enum for Teacher Status to ensure data consistency
 export enum TeacherStatus {
   PROFESSOR = "professor",
   ASSISTANT_PROFESSOR = "assistant_professor",
@@ -24,50 +23,123 @@ export interface IUser extends Document {
   isActive: boolean;
   phone: string;
   gender: "male" | "female" | "other";
-  departmentId?: Types.ObjectId; // For HODs/Teachers/Students
 
-  // Teacher Specific (Newly Added)
+  departmentId?: Types.ObjectId;
+
   teacherStatus?: TeacherStatus;
 
-  // Student Specific
   classId?: Types.ObjectId;
   rollNo?: string;
   admissionDate?: Date;
-  matchPassword: (enteredPassword: string) => Promise<boolean>;
+
+  matchPassword(enteredPassword: string): Promise<boolean>;
 }
 
 const userSchema = new Schema<IUser>(
   {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true },
-    role: { type: String, enum: Object.values(UserRole), required: true },
-    isActive: { type: Boolean, default: true },
-    phone: { type: String, required: true },
-    gender: { type: String, enum: ["male", "female", "other"], required: true },
-    departmentId: { type: Schema.Types.ObjectId, ref: "Department" },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 2,
+      maxlength: 100,
+    },
 
-    // Teacher Specific Field
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    },
+
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+      select: false,
+    },
+
+    role: {
+      type: String,
+      enum: Object.values(UserRole),
+      required: true,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+      match: /^[0-9]{7,15}$/,
+    },
+
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+      required: true,
+    },
+
+    departmentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Department",
+      required: function (this: IUser) {
+        return this.role !== UserRole.ADMIN;
+      },
+    },
+
     teacherStatus: {
       type: String,
       enum: Object.values(TeacherStatus),
+      required: function (this: IUser) {
+        return this.role === UserRole.TEACHER || this.role === UserRole.HOD;
+      },
     },
 
-    // Student Specific Fields
-    classId: { type: Schema.Types.ObjectId, ref: "Class" },
-    rollNo: { type: String },
-    admissionDate: { type: Date, default: Date.now },
+    classId: {
+      type: Schema.Types.ObjectId,
+      ref: "Class",
+      required: function (this: IUser) {
+        return this.role === UserRole.STUDENT;
+      },
+    },
+
+    rollNo: {
+      type: String,
+      trim: true,
+      required: function (this: IUser) {
+        return this.role === UserRole.STUDENT;
+      },
+    },
+
+    admissionDate: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  },
 );
 
-userSchema.pre<IUser>("save", async function () {
+userSchema.pre<IUser>("save", async function (next) {
   if (!this.isModified("password")) return;
-  this.password = await bcrypt.hash(this.password, await bcrypt.genSalt(10));
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 userSchema.methods.matchPassword = async function (enteredPassword: string) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  return bcrypt.compare(enteredPassword, this.password);
 };
+
+userSchema.index({ role: 1 });
+userSchema.index({ departmentId: 1 });
+userSchema.index({ classId: 1 });
 
 export const User = model<IUser>("User", userSchema);

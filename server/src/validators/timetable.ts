@@ -1,16 +1,15 @@
 import { body } from "express-validator";
-import { isValidObjectId, isValidTime } from "./common";
+import { isValidObjectId } from "./common";
 
 export const validateTimetable = [
   body("classId")
-    .trim()
     .notEmpty()
-    .withMessage("Class mapping configuration identity required")
+    .withMessage("Class ID is required")
     .custom(isValidObjectId),
+
   body("day")
-    .trim()
     .notEmpty()
-    .withMessage("Target operational schedule configuration day is required")
+    .withMessage("Day is required")
     .isIn([
       "Monday",
       "Tuesday",
@@ -20,46 +19,40 @@ export const validateTimetable = [
       "Saturday",
       "Sunday",
     ])
-    .withMessage("Must provide a standard day name entry context"),
+    .withMessage("Invalid day"),
+
   body("periods")
     .isArray({ min: 1 })
-    .withMessage(
-      "Periods matrix tracking configuration must contain at least 1 active hour segment",
-    ),
+    .withMessage("At least one period is required"),
+
   body("periods.*.subjectId")
-    .trim()
     .notEmpty()
-    .withMessage("Target Subject configuration context identity required")
+    .withMessage("Subject ID is required")
     .custom(isValidObjectId),
+
   body("periods.*.teacherId")
-    .trim()
     .notEmpty()
-    .withMessage(
-      "Target Instructor tracking context node reference configuration required",
-    )
+    .withMessage("Teacher ID is required")
     .custom(isValidObjectId),
-  body("periods.*.startTime")
-    .trim()
-    .notEmpty()
-    .withMessage("Start timestamp runtime marker required")
-    .custom(isValidTime),
-  body("periods.*.endTime")
-    .trim()
-    .notEmpty()
-    .withMessage("Ending block tracking coordinate required")
-    .custom(isValidTime)
+
+  body("periods.*.startMinutes")
+    .isInt({ min: 0, max: 1440 })
+    .withMessage("startMinutes must be between 0 and 1440"),
+
+  body("periods.*.endMinutes")
+    .isInt({ min: 0, max: 1440 })
+    .withMessage("endMinutes must be between 0 and 1440")
     .custom((value, { req, path }) => {
-      const index = parseInt(path.match(/\d+/)?.[0] || "0", 10);
-      const start = req.body.periods?.[index]?.startTime;
-      if (start && value <= start) {
-        throw new Error(
-          "End hour block cannot occur at or prior to the declared start tracking segment",
-        );
+      const index = Number(path.match(/\d+/)?.[0] || 0);
+
+      const start = req.body.periods[index]?.startMinutes;
+
+      if (value <= start) {
+        throw new Error("endMinutes must be greater than startMinutes");
       }
+
       return true;
     }),
-  body("periods.*.room")
-    .trim()
-    .notEmpty()
-    .withMessage("Assigned room resource designation coordinate is required"),
+
+  body("periods.*.room").trim().notEmpty().withMessage("Room is required"),
 ];

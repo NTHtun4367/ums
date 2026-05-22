@@ -1,26 +1,57 @@
 import { Request, Response } from "express";
-import { AuthRequest } from "../middlewares/auth";
 import asyncHandler from "../utils/asyncHandler";
 import { AcademicYear } from "../models/academicYear";
+import { AuthRequest } from "../middlewares/auth";
 import { logActivity } from "../utils/activitieslog";
 
-// @desc Create a new academic year
+// @desc Create Academic Year
 // @route POST /api/academic-years/create
-// @access Private (Admin only)
+// @access Private/Admin
+
 export const createAcademicYear = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { name, startDate, endDate, isCurrent } = req.body;
 
-    const existingYear = await AcademicYear.findOne({ startDate, endDate });
+    // Check duplicate name
 
-    if (existingYear) {
+    const existingName = await AcademicYear.findOne({
+      name,
+    });
+
+    if (existingName) {
       res.status(400);
-      throw new Error("Academic Year already exists!");
+      throw new Error("Academic year name already exists");
     }
 
-    // If this year is set as current, unset any existing current year
+    // Prevent overlapping years
+
+    const overlappingYear = await AcademicYear.findOne({
+      $or: [
+        {
+          startDate: {
+            $lte: new Date(endDate),
+          },
+          endDate: {
+            $gte: new Date(startDate),
+          },
+        },
+      ],
+    });
+
+    if (overlappingYear) {
+      res.status(400);
+      throw new Error("Academic year overlaps with existing year");
+    }
+
+    // Only one current year
+
     if (isCurrent) {
-      await AcademicYear.updateMany({}, { isCurrent: false });
+      await AcademicYear.updateMany(
+        {},
+        {
+          isCurrent: false,
+        },
+      );
     }
 
     const academicYear = await AcademicYear.create({
@@ -30,43 +61,57 @@ export const createAcademicYear = asyncHandler(
       isCurrent: isCurrent || false,
     });
 
-    // Use userId field to match Activity Log Schema v1
     await logActivity({
       userId: req.user?._id.toString()!,
       action: "Created Academic Year",
-      details: `Name: ${name} (${startDate}-${endDate})`,
+      details: `Created academic year ${academicYear.name}`,
     });
 
-    res.status(201).json(academicYear);
+    res.status(201).json({
+      success: true,
+      data: academicYear,
+    });
   },
 );
 
-// @desc Get all academic years (Pagination & Search)
-// @route GET /api/academic-years
-// @access Public
+// @desc Get all academic years
+
 export const getAllAcademicYears = asyncHandler(
   async (req: Request, res: Response) => {
     const page = Number(req.query.page) || 1;
+
     const limit = Number(req.query.limit) || 10;
+
     const skip = (page - 1) * limit;
 
-    const search = req.query.search;
+    const { search } = req.query;
+
     const query: any = {};
 
     if (search) {
-      query.name = { $regex: search, $options: "i" };
+      query.name = {
+        $regex: search,
+        $options: "i",
+      };
     }
 
     const [total, years] = await Promise.all([
       AcademicYear.countDocuments(query),
+
       AcademicYear.find(query)
-        .sort({ startDate: -1 }) // Sort by year descending
+        .sort({
+          startDate: -1,
+        })
         .skip(skip)
-        .limit(limit),
+        .limit(limit)
+        .lean(),
     ]);
 
     res.status(200).json({
-      years,
+      success: true,
+
+      data: years,
+
       pagination: {
         page,
         pages: Math.ceil(total / limit),
@@ -77,76 +122,122 @@ export const getAllAcademicYears = asyncHandler(
   },
 );
 
-// @desc Get the current active academic year
-// @route GET /api/academic-years/current
-// @access Public
+// @desc Get current academic year
+
 export const getCurrentAcademicYear = asyncHandler(
   async (req: Request, res: Response) => {
-    const currentYear = await AcademicYear.findOne({ isCurrent: true });
+    const currentYear = await AcademicYear.findOne({
+      isCurrent: true,
+    }).lean();
 
     if (!currentYear) {
       res.status(404);
-      throw new Error("No current active academic year found!");
+
+      throw new Error("No current academic year found");
     }
 
-    res.status(200).json(currentYear);
+    res.status(200).json({
+      success: true,
+      data: currentYear,
+    });
   },
 );
 
 // @desc Update academic year
-// @route PATCH /api/academic-years/update/:id
-// @access Private (Admin only)
+
 export const updateAcademicYear = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { isCurrent } = req.body;
 
-    // If being updated to current, unset others
+    const existingYear = await AcademicYear.findById(req.params.id);
+
+    if (!existingYear) {
+      res.status(404);
+
+      throw new Error("Academic year not found");
+    }
+
+    // Prevent overlap
+
+    if (req.body.startDate || req.body.endDate) {
+      const start = req.body.startDate || existingYear.startDate;
+
+      const end = req.body.endDate || existingYear.endDate;
+
+      const overlap = await AcademicYear.findOne({
+        _id: {
+          $ne: req.params.id,
+        },
+
+        startDate: {
+          $lte: new Date(end),
+        },
+
+        endDate: {
+          $gte: new Date(start),
+        },
+      });
+
+      if (overlap) {
+        res.status(400);
+
+        throw new Error("Academic year overlaps with another year");
+      }
+    }
+
+    // Ensure one current year
+
     if (isCurrent) {
       await AcademicYear.updateMany(
-        { _id: { $ne: req.params.id } },
-        { isCurrent: false },
+        {
+          _id: {
+            $ne: req.params.id,
+          },
+        },
+        {
+          isCurrent: false,
+        },
       );
     }
 
     const updatedYear = await AcademicYear.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true, runValidators: true },
+      {
+        new: true,
+        runValidators: true,
+      },
     );
-
-    if (!updatedYear) {
-      res.status(404);
-      throw new Error("Academic Year not found!");
-    }
 
     await logActivity({
       userId: req.user?._id.toString()!,
       action: "Updated Academic Year",
-      details: `Updated info for ${updatedYear.name}`,
+      details: `Updated academic year ${updatedYear?.name}`,
     });
 
-    res.status(200).json(updatedYear);
+    res.status(200).json({
+      success: true,
+      data: updatedYear,
+    });
   },
 );
 
 // @desc Delete academic year
-// @route DELETE /api/academic-years/delete/:id
-// @access Private (Admin only)
+
 export const deleteAcademicYear = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const year = await AcademicYear.findById(req.params.id);
 
     if (!year) {
       res.status(404);
-      throw new Error("Academic Year not found!");
+
+      throw new Error("Academic year not found");
     }
 
-    // Safety check: Cannot delete the active year
     if (year.isCurrent) {
       res.status(400);
-      throw new Error(
-        "Active current academic year cannot be deleted. Set another year as current first.",
-      );
+
+      throw new Error("Cannot delete current academic year");
     }
 
     await year.deleteOne();
@@ -154,9 +245,12 @@ export const deleteAcademicYear = asyncHandler(
     await logActivity({
       userId: req.user?._id.toString()!,
       action: "Deleted Academic Year",
-      details: `Deleted: ${year.name}`,
+      details: `Deleted academic year ${year.name}`,
     });
 
-    res.status(200).json({ message: "Academic Year deleted successfully!" });
+    res.status(200).json({
+      success: true,
+      message: "Academic year deleted successfully",
+    });
   },
 );

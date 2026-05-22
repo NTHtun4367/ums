@@ -1,41 +1,59 @@
 import { Request, Response } from "express";
 import asyncHandler from "../utils/asyncHandler";
 import { Attendance } from "../models/attendance";
+import { AuthRequest } from "../middlewares/auth";
+import { logActivity } from "../utils/activitieslog";
 
 /**
- * @desc    Mark or Update attendance (Bulk or Single)
- * @route   POST /api/attendance
+ * @desc Mark or Update attendance
+ * @route POST /api/attendance
+ * @access Private (Admin/Teacher)
  */
 export const markAttendance = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (req: AuthRequest, res: Response) => {
     const {
       studentId,
       classId,
       subjectId,
+      teacherId,
       academicYearId,
-      date,
+      attendanceDate,
+      sessionNumber,
       status,
-      markedBy,
+      remarks,
     } = req.body;
 
     const attendance = await Attendance.findOneAndUpdate(
       {
         studentId,
         subjectId,
-        date: new Date(date),
+        attendanceDate: new Date(attendanceDate),
+        sessionNumber: sessionNumber || 1,
       },
       {
+        studentId,
         classId,
+        subjectId,
+        teacherId,
         academicYearId,
+        attendanceDate,
+        sessionNumber: sessionNumber || 1,
         status,
-        markedBy,
+        remarks,
       },
       {
         new: true,
         upsert: true,
         runValidators: true,
+        setDefaultsOnInsert: true,
       },
     );
+
+    await logActivity({
+      userId: req.user?._id.toString()!,
+      action: "Marked Attendance",
+      details: `Attendance marked for student ${studentId}`,
+    });
 
     res.status(200).json({
       success: true,
@@ -46,29 +64,38 @@ export const markAttendance = asyncHandler(
 );
 
 /**
- * @desc    Get attendance for a specific class with filters
- * @route   GET /api/attendance/class/:classId
+ * @desc Get attendance by class
+ * @route GET /api/attendance/class/:classId
  */
 export const getAttendanceByClass = asyncHandler(
   async (req: Request, res: Response) => {
     const { classId } = req.params;
-    const { date, subjectId } = req.query;
 
-    // Build the query object with explicit types to avoid TS errors
-    const query: any = { classId };
+    const { attendanceDate, subjectId, sessionNumber } = req.query;
 
-    if (date) {
-      query.date = new Date(date as string);
+    const query: any = {
+      classId,
+    };
+
+    if (attendanceDate) {
+      query.attendanceDate = new Date(attendanceDate as string);
     }
 
     if (subjectId) {
-      query.subjectId = subjectId as string;
+      query.subjectId = subjectId;
+    }
+
+    if (sessionNumber) {
+      query.sessionNumber = Number(sessionNumber);
     }
 
     const records = await Attendance.find(query)
-      .populate("studentId", "full_name roll_number")
-      .populate("markedBy", "full_name")
-      .sort({ date: -1 });
+      .populate("studentId", "name rollNo")
+      .populate("teacherId", "name email")
+      .populate("subjectId", "name code")
+      .sort({
+        attendanceDate: -1,
+      });
 
     res.status(200).json({
       success: true,
@@ -79,36 +106,52 @@ export const getAttendanceByClass = asyncHandler(
 );
 
 /**
- * @desc    Get attendance statistics for a student
- * @route   GET /api/attendance/student/:studentId/stats
+ * @desc Get student attendance stats
+ * @route GET /api/attendance/student/:studentId/stats
  */
 export const getStudentStats = asyncHandler(
   async (req: Request, res: Response) => {
-    const studentId = req.params.studentId as string;
+    const studentId = req.params.studentId;
+
     const academicYearId = req.query.academicYearId as string;
 
     if (!academicYearId) {
       res.status(400);
-      throw new Error("Academic Year ID is required for statistics");
+      throw new Error("Academic Year ID is required");
     }
 
-    // Explicitly casting the search object helps Mongoose match the correct overload
     const records = await Attendance.find({
-      studentId: studentId,
-      academicYearId: academicYearId,
+      studentId,
+      academicYearId,
     });
 
     const stats = {
       totalSessions: records.length,
+
       present: records.filter((r) => r.status === "present").length,
+
       absent: records.filter((r) => r.status === "absent").length,
+
       late: records.filter((r) => r.status === "late").length,
+
       excused: records.filter((r) => r.status === "excused").length,
     };
 
+    const attendancePercentage =
+      stats.totalSessions > 0
+        ? (
+            ((stats.present + stats.late + stats.excused) /
+              stats.totalSessions) *
+            100
+          ).toFixed(2)
+        : "0";
+
     res.status(200).json({
       success: true,
-      data: stats,
+      data: {
+        ...stats,
+        attendancePercentage,
+      },
     });
   },
 );
