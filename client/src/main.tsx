@@ -15,6 +15,7 @@ import Classes from "./pages/academics/classes";
 import Timetable from "./pages/academics/timetable";
 import SubjectsPage from "./pages/academics/subjects";
 import DepartmentPage from "./pages/academics/departments";
+import AttendancePage from "./pages/academics/attendance";
 
 const router = createBrowserRouter([
   {
@@ -72,6 +73,7 @@ const router = createBrowserRouter([
       { path: "classes", element: <Classes /> },
       { path: "subjects", element: <SubjectsPage /> },
       { path: "timetable", element: <Timetable /> },
+      { path: "attendance", element: <AttendancePage /> },
       { path: "departments", element: <DepartmentPage /> },
     ],
   },

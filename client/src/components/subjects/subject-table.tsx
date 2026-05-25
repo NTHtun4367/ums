@@ -1,4 +1,3 @@
-// @/components/subjects/subject-table.tsx
 import {
   MoreHorizontal,
   Loader2,
@@ -88,7 +87,15 @@ export function SubjectTable({
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
                     <BookOpen className="h-4 w-4 text-muted-foreground" />
-                    {item.name}
+                    <div className="flex flex-col">
+                      <span>{item.name}</span>
+                      {/* Optional helper link text styling */}
+                      {item.classId && typeof item.classId === "object" && (
+                        <span className="text-[11px] text-muted-foreground">
+                          Class: {(item.classId as any).name}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell>

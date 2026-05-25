@@ -1,11 +1,12 @@
 // @/store/slices/departmentApi.ts
 import { apiSlice } from "./api";
 import type { DepartmentFormValues } from "@/schemas/department";
+import type { Department, Pagination } from "@/types/type";
 
 export const departmentApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getDepartments: builder.query<
-      any,
+      { departments: Department[]; pagination: Pagination },
       { page: number; search?: string; limit?: number }
     >({
       query: ({ page, search, limit = 10 }) => ({

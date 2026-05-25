@@ -5,7 +5,6 @@ export const classApi = apiSlice.injectEndpoints({
   overrideExisting: false,
   endpoints: (builder) => ({
     // Get Classes with Pagination
-    // classApi.ts
     getClasses: builder.query<
       { classes: Class[]; pagination: Pagination },
       { page: number; limit: number; search?: string; departmentId?: string }
@@ -17,7 +16,7 @@ export const classApi = apiSlice.injectEndpoints({
           page,
           limit,
           search: search || undefined,
-          departmentId: departmentId || undefined, // Ensure this is passed to the backend
+          departmentId: departmentId || undefined, // Passed cleanly to backend filtering systems
         },
       }),
       providesTags: ["Class"],

@@ -7,12 +7,24 @@ export const subjectApi = apiSlice.injectEndpoints({
     // Get Subjects with Pagination & Search
     getSubjects: builder.query<
       { subjects: Subject[]; pagination: Pagination },
-      { page: number; limit: number; search?: string; departmentId?: string }
+      {
+        page: number;
+        limit: number;
+        search?: string;
+        departmentId?: string;
+        classId?: string;
+      } // FIXED: Added classId type
     >({
-      query: ({ page, limit, search, departmentId }) => ({
+      query: ({ page, limit, search, departmentId, classId }) => ({
         url: "/subjects",
         method: "GET",
-        params: { page, limit, search: search || undefined, departmentId },
+        params: {
+          page,
+          limit,
+          search: search || undefined,
+          departmentId,
+          classId, // FIXED: Forwarding classId mapping parameter
+        },
       }),
       providesTags: ["Subject"],
     }),

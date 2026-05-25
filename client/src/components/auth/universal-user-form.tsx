@@ -3,22 +3,17 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { LayoutGrid, User as UserIcon, ShieldCheck } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-
 import {
   useCreateUserMutation,
   useUpdateUserMutation,
 } from "@/store/slices/userApi";
 import { useGetDepartmentsQuery } from "@/store/slices/departmentApi";
 import { useGetClassesQuery } from "@/store/slices/classApi";
-import { useGetSubjectsQuery } from "@/store/slices/subjectApi";
-
 import { CustomSelect } from "../common/custom-select";
-import { CustomMultiSelect } from "../common/custom-multiselect";
 import CustomInput from "../common/custom-input";
-import type { User, UserRole } from "@/types/type";
+import type { Class, Department, User, UserRole } from "@/types/type";
 import { userFormSchema, type UserFormValues } from "@/schemas/user";
 
 interface Props {
@@ -27,8 +22,9 @@ interface Props {
   role: UserRole;
 }
 
-const UniversalUserForm = ({ initialData, onSuccess, role }: Props) => {
+function UniversalUserForm({ initialData, onSuccess, role }: Props) {
   const isUpdate = !!initialData;
+
   const [createUser] = useCreateUserMutation();
   const [updateUser] = useUpdateUserMutation();
 
@@ -39,58 +35,65 @@ const UniversalUserForm = ({ initialData, onSuccess, role }: Props) => {
       email: "",
       phone: "",
       gender: "male",
-      role: role,
+      role,
       departmentId: "",
       teacherStatus: "lecturer",
-      isHod: false,
-      classId: undefined,
+      classId: "",
       rollNo: "",
-      subjectIds: [],
       password: "",
       confirmPassword: "",
     },
   });
 
-  // Watch departmentId to trigger re-fetches for classes/subjects
+  // Watch selected department to dynamically trigger class query
   const selectedDept = form.watch("departmentId");
 
+  // Fetch all departments safely
   const { data: deptData, isLoading: loadingDepts } = useGetDepartmentsQuery({
     page: 1,
     limit: 100,
   });
 
-  // Fetch classes ONLY if student AND department is selected
+  // Fetch classes conditionally based on selected department (only for students)
   const { data: classData, isFetching: loadingClasses } = useGetClassesQuery(
-    { page: 1, limit: 100, departmentId: selectedDept },
-    { skip: role !== "student" || !selectedDept },
+    {
+      page: 1,
+      limit: 100,
+      departmentId: selectedDept,
+    },
+    {
+      skip: role !== "student" || !selectedDept,
+    },
   );
 
-  // Fetch subjects ONLY if teacher AND department is selected
-  const { data: subjectData, isFetching: loadingSubjects } =
-    useGetSubjectsQuery(
-      { page: 1, limit: 100, departmentId: selectedDept },
-      { skip: role !== "teacher" || !selectedDept },
-    );
-
-  // Reset dependent fields when department changes
+  // RESET CLASS ONLY WHEN A USER MANUALLY CHANGES THE DEPARTMENT (PREVENTS BROKEN EDIT INITIALIZATION)
   useEffect(() => {
-    if (!isUpdate) {
-      form.setValue("classId", undefined);
-      form.setValue("subjectIds", []);
+    if (!isUpdate && selectedDept) {
+      form.setValue("classId", "");
     }
-  }, [selectedDept, form, isUpdate]);
+  }, [selectedDept, isUpdate, form]);
 
+  // SYSTEM DATA POPULATION MATRIX ON EDIT MODE
   useEffect(() => {
     if (initialData) {
       form.reset({
-        ...initialData,
+        name: initialData.name || "",
+        email: initialData.email || "",
+        phone: initialData.phone || "",
+        gender: (initialData.gender as any) || "male",
+        role: initialData.role,
         departmentId:
           typeof initialData.departmentId === "object"
-            ? initialData.departmentId._id
-            : initialData.departmentId,
-        isHod: initialData.role === "hod",
-        subjectIds:
-          initialData.teacherSubjects?.map((s: any) => s._id || s) || [],
+            ? (initialData.departmentId as Department)?._id || ""
+            : (initialData.departmentId as string) || "",
+        teacherStatus: initialData.teacherStatus || "lecturer",
+        classId:
+          typeof initialData.classId === "object"
+            ? (initialData.classId as Class)?._id || ""
+            : (initialData.classId as string) || "",
+        rollNo: initialData.rollNo || "",
+        password: "",
+        confirmPassword: "",
       });
     }
   }, [initialData, form]);
@@ -98,32 +101,49 @@ const UniversalUserForm = ({ initialData, onSuccess, role }: Props) => {
   async function onSubmit(data: UserFormValues) {
     try {
       const payload: any = {
-        ...data,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        gender: data.gender,
         role,
       };
 
-      // Auto assign professor for HOD
+      // Password processing
+      if (data.password) {
+        payload.password = data.password;
+      }
+
+      // Department parsing rules
+      if (role !== "admin") {
+        payload.departmentId = data.departmentId || undefined;
+      }
+
+      // Teacher / HOD adjustments
+      if (role === "teacher") {
+        payload.teacherStatus = data.teacherStatus;
+      }
+
       if (role === "hod") {
         payload.teacherStatus = "professor";
       }
 
-      // Remove empty optional fields
-      if (!payload.classId) delete payload.classId;
-      if (!payload.departmentId) delete payload.departmentId;
-      if (!payload.rollNo) delete payload.rollNo;
-
-      if (!data.password) delete payload.password;
-
-      delete payload.confirmPassword;
+      // Student assignment parameters
+      if (role === "student") {
+        payload.classId = data.classId || undefined;
+        payload.rollNo = data.rollNo;
+      }
 
       if (isUpdate) {
-        await updateUser({ id: initialData._id, data: payload }).unwrap();
+        await updateUser({
+          id: initialData!._id,
+          data: payload,
+        }).unwrap();
+
         toast.success("User updated successfully");
       } else {
         await createUser(payload).unwrap();
         toast.success("User created successfully");
       }
-
       onSuccess?.();
     } catch (error: any) {
       toast.error(error?.data?.message || "Operation failed");
@@ -132,11 +152,13 @@ const UniversalUserForm = ({ initialData, onSuccess, role }: Props) => {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-2">
+      {/* PERSONAL INFO */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-primary">
           <UserIcon size={16} />
           <span>Personal Information</span>
         </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <CustomInput
             control={form.control}
@@ -144,6 +166,7 @@ const UniversalUserForm = ({ initialData, onSuccess, role }: Props) => {
             label="Full Name"
             placeholder="Jane Doe"
           />
+
           <CustomSelect
             control={form.control}
             name="gender"
@@ -154,6 +177,7 @@ const UniversalUserForm = ({ initialData, onSuccess, role }: Props) => {
               { label: "Other", value: "other" },
             ]}
           />
+
           <CustomInput
             control={form.control}
             name="email"
@@ -161,6 +185,7 @@ const UniversalUserForm = ({ initialData, onSuccess, role }: Props) => {
             type="email"
             placeholder="jane@university.edu"
           />
+
           <CustomInput
             control={form.control}
             name="phone"
@@ -172,24 +197,43 @@ const UniversalUserForm = ({ initialData, onSuccess, role }: Props) => {
 
       <Separator />
 
+      {/* ACADEMIC ASSIGNMENT */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-primary">
           <LayoutGrid size={16} />
           <span>Academic Assignment</span>
         </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <CustomSelect
-            control={form.control}
-            name="departmentId"
-            label="Department"
-            loading={loadingDepts}
-            options={
-              deptData?.departments?.map((d: any) => ({
-                label: d.name,
-                value: d._id,
-              })) || []
-            }
-          />
+          {role !== "admin" && (
+            <CustomSelect
+              control={form.control}
+              name="departmentId"
+              label="Department"
+              loading={loadingDepts}
+              options={
+                deptData?.departments?.map((d: any) => ({
+                  label: d.name,
+                  value: d._id,
+                })) || []
+              }
+            />
+          )}
+
+          {(role === "teacher" || role === "hod") && (
+            <CustomSelect
+              control={form.control}
+              name="teacherStatus"
+              label="Teacher Rank"
+              disabled={role === "hod"}
+              options={[
+                { label: "Professor", value: "professor" },
+                { label: "Assistant Professor", value: "assistant_professor" },
+                { label: "Lecturer", value: "lecturer" },
+                { label: "Tutor", value: "tutor" },
+              ]}
+            />
+          )}
 
           {role === "student" && (
             <>
@@ -206,6 +250,7 @@ const UniversalUserForm = ({ initialData, onSuccess, role }: Props) => {
                   })) || []
                 }
               />
+
               <CustomInput
                 control={form.control}
                 name="rollNo"
@@ -214,67 +259,42 @@ const UniversalUserForm = ({ initialData, onSuccess, role }: Props) => {
               />
             </>
           )}
-
-          {role === "teacher" && (
-            <CustomSelect
-              control={form.control}
-              name="teacherStatus"
-              label="Teacher Rank"
-              options={[
-                { label: "Professor", value: "professor" },
-                { label: "Assistant Professor", value: "assistant_professor" },
-                { label: "Lecturer", value: "lecturer" },
-                { label: "Tutor", value: "tutor" },
-              ]}
-            />
-          )}
         </div>
-
-        {role === "teacher" && (
-          <div className="space-y-4">
-            <CustomMultiSelect
-              control={form.control}
-              name="subjectIds"
-              label={
-                selectedDept ? "Teaching Subjects" : "Select Department First"
-              }
-              loading={loadingSubjects}
-              disabled={!selectedDept}
-              options={
-                subjectData?.subjects?.map((s: any) => ({
-                  label: s.name,
-                  value: s._id,
-                })) || []
-              }
-            />
-          </div>
-        )}
       </div>
 
       <Separator />
 
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-primary">
-          <ShieldCheck size={16} />
-          <span>Security & Access</span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <CustomInput
-            control={form.control}
-            name="password"
-            label="Password"
-            type="password"
-            placeholder="********"
-          />
-          <CustomInput
-            control={form.control}
-            name="confirmPassword"
-            label="Confirm"
-            type="password"
-            placeholder="********"
-          />
-        </div>
-      </div>
+      {/* SECURITY */}
+      {!isUpdate && (
+        <>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-primary">
+              <ShieldCheck size={16} />
+              <span>Security & Access</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CustomInput
+                control={form.control}
+                name="password"
+                label="Password"
+                type="password"
+                placeholder="********"
+              />
+
+              <CustomInput
+                control={form.control}
+                name="confirmPassword"
+                label="Confirm Password"
+                type="password"
+                placeholder="********"
+              />
+            </div>
+          </div>
+
+          <Separator />
+        </>
+      )}
 
       <Button
         type="submit"
@@ -289,6 +309,6 @@ const UniversalUserForm = ({ initialData, onSuccess, role }: Props) => {
       </Button>
     </form>
   );
-};
+}
 
 export default UniversalUserForm;

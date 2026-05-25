@@ -3,46 +3,75 @@ import * as z from "zod";
 export const userFormSchema = z
   .object({
     name: z.string().min(2, "Full name is required"),
-    email: z.string().email("Invalid email address"),
-    phone: z.string().min(5, "Phone number is required"),
+    email: z.email("Invalid email address"),
+    phone: z.string().min(7, "Phone number is required"),
     gender: z.enum(["male", "female", "other"]),
-    role: z.string().optional(),
-    departmentId: z.string().min(1, "Department selection is required"),
-    // Teacher specific
-    teacherStatus: z.string().optional(),
-    isHod: z.boolean(),
-    subjectIds: z.array(z.string()).optional(),
-    // Student specific
+    role: z.enum(["admin", "hod", "teacher", "student"]),
+    departmentId: z.string().optional(),
+    teacherStatus: z
+      .enum(["professor", "assistant_professor", "lecturer", "tutor"])
+      .optional(),
     classId: z.string().optional(),
     rollNo: z.string().optional(),
-    // Security
     password: z.string().optional(),
     confirmPassword: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    /**
-     * 1. Password Length Validation
-     * We only validate length if a password was actually entered.
-     * This allows 'Update' mode to leave it empty.
-     */
+    // PASSWORD VALIDATION
     if (data.password && data.password.length < 6) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Password must be at least 6 characters",
         path: ["password"],
+        message: "Password must be at least 6 characters",
       });
     }
 
-    /**
-     * 2. Password Confirmation Validation
-     * Validates that both fields match if either is touched.
-     */
     if (data.password !== data.confirmPassword) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Passwords don't match",
         path: ["confirmPassword"],
+        message: "Passwords do not match",
       });
+    }
+
+    // DEPARTMENT REQUIRED EXCEPT ADMIN
+    if (data.role !== "admin" && !data.departmentId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["departmentId"],
+        message: "Department is required",
+      });
+    }
+
+    // TEACHER VALIDATION
+    if (
+      (data.role === "teacher" || data.role === "hod") &&
+      !data.teacherStatus
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["teacherStatus"],
+        message: "Teacher status is required",
+      });
+    }
+
+    // STUDENT VALIDATION
+    if (data.role === "student") {
+      if (!data.classId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["classId"],
+          message: "Class is required",
+        });
+      }
+
+      if (!data.rollNo) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["rollNo"],
+          message: "Roll number is required",
+        });
+      }
     }
   });
 

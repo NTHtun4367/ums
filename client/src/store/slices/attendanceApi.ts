@@ -1,5 +1,5 @@
 import { apiSlice } from "./api";
-import type { Attendance } from "@/types/type";
+import type { Attendance, AttendanceStats } from "@/types/type";
 
 export const attendanceApi = apiSlice.injectEndpoints({
   overrideExisting: false,
@@ -7,7 +7,10 @@ export const attendanceApi = apiSlice.injectEndpoints({
     /**
      * @desc Mark student attendance
      */
-    markAttendance: builder.mutation<{ message: string }, any>({
+    markAttendance: builder.mutation<
+      { success: boolean; message: string; data: Attendance },
+      Partial<Attendance>
+    >({
       query: (data) => ({
         url: "/attendance",
         method: "POST",
@@ -19,10 +22,19 @@ export const attendanceApi = apiSlice.injectEndpoints({
     /**
      * @desc Get attendance records for a specific class
      */
-    getAttendanceByClass: builder.query<Attendance[], string>({
-      query: (classId) => ({
+    getAttendanceByClass: builder.query<
+      { success: boolean; count: number; data: Attendance[] },
+      {
+        classId: string;
+        attendanceDate?: string;
+        subjectId?: string;
+        sessionNumber?: number;
+      }
+    >({
+      query: ({ classId, ...params }) => ({
         url: `/attendance/class/${classId}`,
         method: "GET",
+        params,
       }),
       providesTags: ["Attendance"],
     }),
@@ -30,10 +42,14 @@ export const attendanceApi = apiSlice.injectEndpoints({
     /**
      * @desc Get attendance statistics for a specific student
      */
-    getStudentStats: builder.query<any, string>({
-      query: (studentId) => ({
+    getStudentStats: builder.query<
+      { success: boolean; data: AttendanceStats },
+      { studentId: string; academicYearId: string }
+    >({
+      query: ({ studentId, academicYearId }) => ({
         url: `/attendance/student/${studentId}/stats`,
         method: "GET",
+        params: { academicYearId },
       }),
       providesTags: ["Attendance"],
     }),

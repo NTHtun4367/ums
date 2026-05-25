@@ -9,6 +9,7 @@ export const departmentFormSchema = z.object({
     .max(10, "Code is too long")
     .toUpperCase(),
   description: z.string().optional(),
+  isAcademic: z.boolean(),
   headId: z.string().optional(), // Handled as string ID for the form
 });
 

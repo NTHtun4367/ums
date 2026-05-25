@@ -46,6 +46,11 @@ export const SIDEBAR_CONFIG = {
           url: "/timetable",
           roles: ["admin", "teacher", "student", "hod"],
         },
+        {
+          title: "Attendance",
+          url: "/attendance",
+          roles: ["admin", "teacher", "hod", "student"],
+        },
       ],
     },
     {
