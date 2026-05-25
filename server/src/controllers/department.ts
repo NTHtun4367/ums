@@ -16,10 +16,13 @@ import { logActivity } from "../utils/activitieslog";
 
 export const createDepartment = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const { name, code, description, headId } = req.body;
+    const { name, code, description, headId, isAcademic } = req.body;
+
+    const normalizedName = name.trim();
+    const normalizedCode = code.toUpperCase();
 
     const existingDepartment = await Department.findOne({
-      $or: [{ name: name.trim() }, { code: code.toUpperCase() }],
+      $or: [{ name: normalizedName }, { code: normalizedCode }],
     });
 
     if (existingDepartment) {
@@ -44,10 +47,14 @@ export const createDepartment = asyncHandler(
     }
 
     const department = await Department.create({
-      name: name.trim(),
-      code: code.toUpperCase(),
+      name: normalizedName,
+      code: normalizedCode,
       description,
-      headId: headId ? new Types.ObjectId(headId) : undefined,
+
+      // NEW FIELD
+      isAcademic: typeof isAcademic === "boolean" ? isAcademic : true,
+
+      headId: headId ? new Types.ObjectId(headId) : null,
     });
 
     await logActivity({
@@ -56,7 +63,11 @@ export const createDepartment = asyncHandler(
       details: `Created department ${department.name}`,
     });
 
-    res.status(201).json(department);
+    res.status(201).json({
+      success: true,
+      message: "Department created successfully",
+      data: department,
+    });
   },
 );
 
@@ -72,7 +83,7 @@ export const getDepartments = asyncHandler(
 
     const skip = (page - 1) * limit;
 
-    const { search } = req.query;
+    const { search, isAcademic } = req.query;
 
     const filters: any = {};
 
@@ -93,6 +104,11 @@ export const getDepartments = asyncHandler(
       ];
     }
 
+    // NEW FILTER
+    if (typeof isAcademic !== "undefined") {
+      filters.isAcademic = isAcademic === "true";
+    }
+
     const [departments, total] = await Promise.all([
       Department.find(filters)
         .populate("headId", "name email role")
@@ -104,6 +120,7 @@ export const getDepartments = asyncHandler(
     ]);
 
     res.status(200).json({
+      success: true,
       departments,
       pagination: {
         page,
@@ -131,7 +148,10 @@ export const getDepartmentById = asyncHandler(
       throw new Error("Department not found");
     }
 
-    res.status(200).json(department);
+    res.status(200).json({
+      success: true,
+      data: department,
+    });
   },
 );
 
@@ -148,16 +168,21 @@ export const updateDepartment = asyncHandler(
       throw new Error("Department not found");
     }
 
-    // Uppercase code
+    // Normalize fields
 
     if (req.body.code) {
       req.body.code = req.body.code.toUpperCase();
+    }
+
+    if (req.body.name) {
+      req.body.name = req.body.name.trim();
     }
 
     // Duplicate validation
 
     const duplicateDepartment = await Department.findOne({
       _id: { $ne: req.params.id },
+
       $or: [
         {
           name: req.body.name || department.name,
@@ -189,7 +214,28 @@ export const updateDepartment = asyncHandler(
       }
     }
 
-    Object.assign(department, req.body);
+    // NEW FIELD SUPPORT
+    if (typeof req.body.isAcademic !== "undefined") {
+      department.isAcademic = req.body.isAcademic;
+    }
+
+    if (typeof req.body.name !== "undefined") {
+      department.name = req.body.name;
+    }
+
+    if (typeof req.body.code !== "undefined") {
+      department.code = req.body.code;
+    }
+
+    if (typeof req.body.description !== "undefined") {
+      department.description = req.body.description;
+    }
+
+    if (typeof req.body.headId !== "undefined") {
+      department.headId = req.body.headId
+        ? new Types.ObjectId(req.body.headId)
+        : null;
+    }
 
     await department.save();
 
@@ -199,7 +245,11 @@ export const updateDepartment = asyncHandler(
       details: `Updated department ${department.name}`,
     });
 
-    res.status(200).json(department);
+    res.status(200).json({
+      success: true,
+      message: "Department updated successfully",
+      data: department,
+    });
   },
 );
 

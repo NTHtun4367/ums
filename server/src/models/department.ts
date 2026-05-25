@@ -4,7 +4,10 @@ export interface IDepartment extends Document {
   name: string;
   code: string;
   description?: string;
-  headId?: Types.ObjectId;
+  isAcademic: boolean;
+  headId?: Types.ObjectId | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const departmentSchema = new Schema<IDepartment>(
@@ -12,7 +15,7 @@ const departmentSchema = new Schema<IDepartment>(
     name: {
       type: String,
       required: true,
-      unique: true,
+      unique: true, // AUTO INDEX
       trim: true,
       minlength: 2,
       maxlength: 100,
@@ -21,7 +24,7 @@ const departmentSchema = new Schema<IDepartment>(
     code: {
       type: String,
       required: true,
-      unique: true,
+      unique: true, // AUTO INDEX
       uppercase: true,
       trim: true,
       minlength: 2,
@@ -34,6 +37,13 @@ const departmentSchema = new Schema<IDepartment>(
       maxlength: 500,
     },
 
+    isAcademic: {
+      type: Boolean,
+      required: true,
+      default: true,
+      index: true, // AUTO INDEX
+    },
+
     headId: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -44,12 +54,6 @@ const departmentSchema = new Schema<IDepartment>(
     timestamps: true,
   },
 );
-
-// Useful indexes
-
-departmentSchema.index({ name: 1 });
-
-departmentSchema.index({ code: 1 });
 
 departmentSchema.index({ headId: 1 });
 

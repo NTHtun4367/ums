@@ -32,7 +32,7 @@ export const saveTimetable = asyncHandler(
         day,
       },
       {
-        classId,
+        classId: new Types.ObjectId(classId),
         day,
         periods: formattedPeriods,
       },

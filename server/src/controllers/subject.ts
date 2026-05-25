@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Types } from "mongoose";
 import { AuthRequest } from "../middlewares/auth";
 import asyncHandler from "../utils/asyncHandler";
 import { Subject } from "../models/subject";
@@ -25,8 +26,8 @@ export const createSubject = asyncHandler(
     const subject = await Subject.create({
       name,
       code: code.toUpperCase(),
-      departmentId,
-      classId,
+      departmentId: new Types.ObjectId(departmentId),
+      classId: new Types.ObjectId(classId),
       semester,
     });
 
@@ -55,11 +56,15 @@ export const getSubjects = asyncHandler(async (req: Request, res: Response) => {
   const filters: any = {};
 
   if (departmentId) {
-    filters.departmentId = departmentId;
+    filters.departmentId = {
+      $in: [departmentId, new Types.ObjectId(departmentId as string)],
+    };
   }
 
   if (classId) {
-    filters.classId = classId;
+    filters.classId = {
+      $in: [classId, new Types.ObjectId(classId as string)],
+    };
   }
 
   if (semester) {
@@ -150,6 +155,14 @@ export const updateSubject = asyncHandler(
     if (duplicateSubject) {
       res.status(400);
       throw new Error("Another subject already uses this code");
+    }
+
+    if (req.body.departmentId) {
+      req.body.departmentId = new Types.ObjectId(req.body.departmentId);
+    }
+
+    if (req.body.classId) {
+      req.body.classId = new Types.ObjectId(req.body.classId);
     }
 
     Object.assign(subject, req.body);

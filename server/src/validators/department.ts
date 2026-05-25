@@ -23,5 +23,12 @@ export const validateDepartment = [
     .isLength({ max: 500 })
     .withMessage("Description cannot exceed 500 characters"),
 
+  // NEW FIELD
+  body("isAcademic")
+    .optional()
+    .isBoolean()
+    .withMessage("isAcademic must be a boolean value")
+    .toBoolean(),
+
   body("headId").optional({ checkFalsy: true }).custom(isValidObjectId),
 ];
