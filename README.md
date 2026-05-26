@@ -7,62 +7,54 @@ UMS is a modern full-stack university management platform built to streamline ac
 ## 🚀 Features
 
 ### 👨‍🎓 Student Management
-
 * Register and manage student profiles
 * Track academic information and department assignments
 * Manage enrollment records and class allocations
 
 ### 👨‍🏫 Teacher & Department Management
-
 * Department creation and administration
 * Assign department heads and instructors
 * Manage teacher information and course responsibilities
 
 ### 📅 Timetable System
-
 * Dynamic class timetable generation
 * Department and class-based schedule management
 * Real-time timetable viewing for students and teachers
 
 ### 🏫 Academic Structure
-
 * Faculty, department, semester, and class management
 * Subject and course organization
 * Scalable academic hierarchy design
 
 ### 🔐 Authentication & Authorization
-
 * Secure login system
 * Role-based access control (Admin, Teacher, Student)
 * Protected routes and API authorization
 
 ### ⚡ Modern Full-Stack Architecture
-
-* REST API powered backend
+* REST API powered backend with background event processing
 * Responsive frontend UI
-* Modular and scalable project structure
+* Modular and scalable monorepo project structure
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-
-* **React**
+### Frontend (`/client`)
+* **React 18** (Vite-powered)
+* **TypeScript**
 * **Redux Toolkit + RTK Query**
 * **Tailwind CSS**
 * **React Router**
-* **TypeScript / JavaScript**
+* **ESLint**
 
-### Backend
-
-* **Node.js**
+### Backend (`/server`)
+* **Node.js** & **TypeScript** (`tsx` / `tsconfig`)
 * **Express.js**
-* **MongoDB**
-* **Mongoose**
+* **Inngest** (Asynchronous event-driven serverless functions)
+* **MongoDB** & **Mongoose**
 
 ### Additional Tools
-
 * JWT Authentication
 * Cloud/File Upload Support
 * RESTful APIs
@@ -71,7 +63,6 @@ UMS is a modern full-stack university management platform built to streamline ac
 ---
 
 ## 📂 Core Modules
-
 * Authentication System
 * Student Management
 * Teacher Management
@@ -86,13 +77,30 @@ UMS is a modern full-stack university management platform built to streamline ac
 ## 🧩 Project Structure
 
 ```bash
-UMS/
-├── client/              # Frontend Application
-├── server/              # Backend API
-├── models/              # Database Models
-├── controllers/         # Business Logic
-├── routes/              # API Routes
-├── middleware/          # Authentication & Validation
-├── redux/               # Redux Store & APIs
-└── components/          # Reusable UI Components
-```
+ums/
+├── client/                  # Frontend Application (Vite + React + TS)
+│   ├── node_modules/
+│   ├── public/
+│   ├── src/                 # Frontend source code
+│   ├── .env                 # Frontend environment variables
+│   ├── components.json      # Component configuration
+│   ├── eslint.config.js     # Linting rules
+│   ├── index.html           # Main HTML entry point
+│   ├── package.json
+│   ├── tsconfig.json        # TypeScript configurations
+│   └── vite.config.ts       # Vite bundler configuration
+│
+└── server/                  # Backend API (Node.js + Express + TS)
+    ├── node_modules/
+    ├── src/                 # Backend source code
+    │   ├── config/          # Database & third-party configurations
+    │   ├── controllers/     # Route handlers & business logic
+    │   ├── inngest/         # Event-driven background functions & client
+    │   ├── middlewares/     # Authentication & request validation rules
+    │   ├── models/          # Mongoose database schemas
+    │   ├── routes/          # Express API route definitions
+    │   ├── utils/           # Helper functions & utilities
+    │   ├── validators/      # Request body schema validators
+    │   └── app.ts           # Main Express server entry point
+    ├── .env                 # Backend environment variables
+    └── package-lock.json
