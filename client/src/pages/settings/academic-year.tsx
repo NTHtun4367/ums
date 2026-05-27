@@ -13,6 +13,9 @@ import AcademicYearForm from "@/components/academic-year/academic-year-form";
 import CustomAlert from "@/components/common/custom-alert";
 import CustomSearch from "@/components/common/custom-search";
 
+import { PageHeader } from "@/components/common/page-header";
+import { Calendar as CalendarIcon } from "lucide-react";
+
 const AcademicYearPage = () => {
   const [search, setSearch] = useState("");
   const [queryParams, setQueryParams] = useState({
@@ -73,26 +76,20 @@ const AcademicYearPage = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Academic Sessions
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Configure your school's active periods and history.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <CustomSearch
-            search={search}
-            setSearch={setSearch}
-            title="Search sessions..."
-          />
-          <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" /> Add Year
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Academic Sessions"
+        description="Configure your school's active periods and history."
+        icon={<CalendarIcon className="h-6 w-6" />}
+      >
+        <CustomSearch
+          search={search}
+          setSearch={setSearch}
+          title="Search sessions..."
+        />
+        <Button onClick={handleCreate} className="rounded-xl">
+          <Plus className="mr-2 h-4 w-4" /> Add Year
+        </Button>
+      </PageHeader>
 
       <AcademicYearTable
         data={years}

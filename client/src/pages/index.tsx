@@ -8,19 +8,23 @@ import {
   BookOpen, 
   GraduationCap, 
   ClipboardCheck,
-  History,
   Activity,
   ArrowUpRight,
   School,
   AlertCircle,
   Calendar,
   Clock,
-  MapPin
+  MapPin,
+  Megaphone,
+  ArrowRight
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useGetAnnouncementsQuery } from "@/store/slices/announcementApi";
+import { useNavigate } from "react-router";
+
 import { 
   BarChart, 
   Bar, 
@@ -32,8 +36,6 @@ import {
   PieChart, 
   Pie, 
   Cell,
-  LineChart,
-  Line,
   Legend
 } from 'recharts';
 
@@ -73,8 +75,10 @@ function DashboardSkeleton() {
 }
 
 function Index() {
+  const navigate = useNavigate();
   const { userInfo } = useSelector((state: RootState) => state.auth);
   const { data, isLoading, isError, refetch } = useGetDashboardStatsQuery();
+  const { data: announcementData } = useGetAnnouncementsQuery();
 
   if (isLoading) return <DashboardSkeleton />;
 
@@ -97,10 +101,10 @@ function Index() {
   }
 
   const stats = data?.data?.summary || [];
-  const activities = data?.data?.recentActivities || [];
   const attendanceTrend = data?.data?.chartData?.attendanceTrend || [];
   const userDistribution = data?.data?.chartData?.userDistribution || [];
   const todaySchedule = data?.data?.todaySchedule || [];
+  const recentAnnouncements = announcementData?.data?.slice(0, 3) || [];
 
   return (
     <div className="p-6 space-y-8 max-w-[1600px] mx-auto">
@@ -196,7 +200,7 @@ function Index() {
                     dataKey="count"
                     nameKey="_id"
                   >
-                    {userDistribution.map((entry: any, index: number) => (
+                    {userDistribution.map((_: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -258,55 +262,46 @@ function Index() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activity Feed */}
+        {/* Latest Announcements */}
         <Card className="lg:col-span-2 border-none shadow-sm bg-white dark:bg-slate-900">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 dark:border-slate-800 pb-6">
+          <CardHeader className="flex flex-row items-center justify-between">
             <div className="space-y-1">
               <CardTitle className="text-xl flex items-center gap-2">
-                <History className="w-5 h-5 text-primary" />
-                Recent Activities
+                <Megaphone className="w-5 h-5 text-primary" />
+                Latest Announcements
               </CardTitle>
-              <CardDescription>Latest system logs and user actions</CardDescription>
+              <CardDescription>Important updates and notices</CardDescription>
             </div>
-            <button className="text-sm font-medium text-primary hover:underline">View All Logs</button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/announcements")} className="text-primary gap-1">
+              View All <ArrowRight className="w-4 h-4" />
+            </Button>
           </CardHeader>
-          <CardContent className="p-0">
-            {activities.length > 0 ? (
-              <div className="divide-y divide-slate-50 dark:divide-slate-800">
-                {activities.map((activity) => (
-                  <div key={activity._id} className="p-6 flex items-start gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                    <div className="mt-1 p-2 rounded-full bg-slate-100 dark:bg-slate-800">
-                      <Activity className="w-4 h-4 text-slate-500" />
+          <CardContent>
+            <div className="space-y-4">
+              {recentAnnouncements.length > 0 ? (
+                recentAnnouncements.map((announcement) => (
+                  <div key={announcement._id} className="p-4 rounded-2xl border border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-bold text-base">{announcement.title}</h4>
+                      <span className="text-[10px] text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                        {format(new Date(announcement.createdAt), "MMM d")}
+                      </span>
                     </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex justify-between items-start">
-                        <p className="font-semibold text-sm">
-                          {activity.action}
-                        </p>
-                        <span className="text-[10px] text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                          {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{activity.details}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="secondary" className="text-[10px] h-4 px-1.5 capitalize">
-                          {activity.userId?.name || "System"}
-                        </Badge>
-                        <span className="text-[10px] text-slate-400">&bull;</span>
-                        <span className="text-[10px] text-slate-400 capitalize">{activity.userId?.role || "Staff"}</span>
-                      </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{announcement.content}</p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-[10px] px-1.5">{announcement.authorId?.name}</Badge>
+                      <span className="text-[10px] text-slate-400">&bull;</span>
+                      <span className="text-[10px] text-slate-400 capitalize">{announcement.target}</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-12 text-center space-y-3">
-                <div className="inline-flex p-4 rounded-full bg-slate-50 text-slate-300">
-                  <History className="w-8 h-8" />
+                ))
+              ) : (
+                <div className="py-8 text-center text-muted-foreground">
+                  <Megaphone className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                  <p>No recent announcements.</p>
                 </div>
-                <p className="text-muted-foreground">No recent activities found.</p>
-              </div>
-            )}
+              )}
+            </div>
           </CardContent>
         </Card>
 

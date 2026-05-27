@@ -23,6 +23,7 @@ import timetableRoutes from "./routes/timetable";
 import dashboardRoutes from "./routes/dashboard";
 import attendanceRoutes from "./routes/attendance"; // Added Attendance
 import departmentRoutes from "./routes/department";
+import announcementRoutes from "./routes/announcement";
 
 import { serve } from "inngest/express";
 import { inngest } from "./inngest";
@@ -69,6 +70,7 @@ app.use("/api/timetables", timetableRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/attendance", attendanceRoutes); // Registered Attendance Route
 app.use("/api/departments", departmentRoutes);
+app.use("/api/announcements", announcementRoutes);
 
 // Inngest Background Jobs
 app.use(

@@ -11,6 +11,9 @@ import {
   useDeleteDepartmentMutation,
 } from "@/store/slices/departmentApi";
 
+import { PageHeader } from "@/components/common/page-header";
+import { Building2 } from "lucide-react";
+
 const DepartmentPage = () => {
   const [search, setSearch] = useState("");
   const [queryParams, setQueryParams] = useState({ page: 1, search: "" });
@@ -42,29 +45,26 @@ const DepartmentPage = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Departments</h1>
-          <p className="text-muted-foreground">
-            Manage academic departments and their heads.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <CustomSearch
-            search={search}
-            setSearch={setSearch}
-            title="Department"
-          />
-          <Button
-            onClick={() => {
-              setEditingDept(null);
-              setIsFormOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add Department
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Departments"
+        description="Manage academic departments and their heads."
+        icon={<Building2 className="h-6 w-6" />}
+      >
+        <CustomSearch
+          search={search}
+          setSearch={setSearch}
+          title="Department"
+        />
+        <Button
+          onClick={() => {
+            setEditingDept(null);
+            setIsFormOpen(true);
+          }}
+          className="rounded-xl"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Add Department
+        </Button>
+      </PageHeader>
 
       <DepartmentTable
         data={data?.departments || []}

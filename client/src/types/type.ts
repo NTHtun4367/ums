@@ -64,6 +64,24 @@ export interface User {
   updatedAt?: string;
 }
 
+export interface AcademicYear {
+  _id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  isCurrent: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ActivitiesLog {
+  _id: string;
+  userId: string | User;
+  action: string;
+  details?: string;
+  createdAt: string;
+}
+
 export interface TimetablePeriod {
   subjectId:
     | string

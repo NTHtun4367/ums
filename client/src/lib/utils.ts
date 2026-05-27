@@ -15,13 +15,10 @@ export const prepareUserPayload = (
     name: data.name,
     email: data.email,
     password: data.password,
-    // 🔴 အရေးကြီးဆုံးအပိုင်း: string ကို UserRole အဖြစ်သတ်မှတ်ခြင်း
     role: data.role as UserRole,
 
-    // Student ဖြစ်ရင် Class ID ကို ထည့်ပေးခြင်း
-    studentClass: data.studentClass ? data.studentClass : undefined,
+    classId: data.classId ? data.classId : undefined,
 
-    // Teacher ဖြစ်ရင် Subject IDs (Array) ကို ထည့်ပေးခြင်း
     teacherSubjects: data.teacherSubjects ? data.teacherSubjects : [],
   };
 };

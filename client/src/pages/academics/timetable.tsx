@@ -13,6 +13,7 @@ import { useGetClassesQuery } from "@/store/slices/classApi";
 import { useGetClassTimetableQuery } from "@/store/slices/timetableApi";
 
 import { CustomSelect } from "@/components/common/custom-select";
+import { PageHeader } from "@/components/common/page-header";
 
 import type { RootState } from "@/store";
 import type { Department, Class } from "@/types/type";
@@ -74,24 +75,11 @@ const TimetablePage = () => {
 
   return (
     <div className="p-6 space-y-6">
-      {/* HEADER */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm gap-4">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
-            <CalendarDays className="w-6 h-6" />
-          </div>
-
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Timetable Matrix Hub
-            </h1>
-
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-              Manage weekly class schedules and academic time allocations.
-            </p>
-          </div>
-        </div>
-
+      <PageHeader
+        title="Timetable Matrix Hub"
+        description="Manage weekly class schedules and academic time allocations."
+        icon={<CalendarDays className="h-6 w-6" />}
+      >
         {selectedClass &&
           (userInfo?.role === "admin" || userInfo?.role === "hod") && (
             <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl border border-zinc-200 dark:border-zinc-700">
@@ -99,28 +87,26 @@ const TimetablePage = () => {
                 onClick={() => setViewMode("view")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                   viewMode === "view"
-                    ? "bg-white dark:bg-zinc-900 shadow text-zinc-900 dark:text-zinc-50"
-                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+                    ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-50"
+                    : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
                 }`}
               >
-                <Eye className="w-4 h-4" />
-                View
+                <Eye className="w-4 h-4" /> View
               </button>
 
               <button
                 onClick={() => setViewMode("edit")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                   viewMode === "edit"
-                    ? "bg-white dark:bg-zinc-900 shadow text-zinc-900 dark:text-zinc-50"
-                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+                    ? "bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-50"
+                    : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
                 }`}
               >
-                <Edit3 className="w-4 h-4" />
-                Edit
+                <Edit3 className="w-4 h-4" /> Manage
               </button>
             </div>
           )}
-      </div>
+      </PageHeader>
 
       {/* FILTERS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">

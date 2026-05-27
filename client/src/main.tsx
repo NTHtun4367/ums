@@ -16,6 +16,7 @@ import Timetable from "./pages/academics/timetable";
 import SubjectsPage from "./pages/academics/subjects";
 import DepartmentPage from "./pages/academics/departments";
 import AttendancePage from "./pages/academics/attendance";
+import AnnouncementsPage from "./pages/announcements";
 
 const router = createBrowserRouter([
   {
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Index /> },
       { path: "dashboard", element: <Index /> },
+      { path: "announcements", element: <AnnouncementsPage /> },
       { path: "settings/academic-years", element: <AcademicYear /> },
       {
         path: "users/students",

@@ -4,6 +4,7 @@ import {
   Users,
   Banknote,
   Settings2,
+  Megaphone,
 } from "lucide-react";
 
 export const SIDEBAR_CONFIG = {
@@ -19,6 +20,13 @@ export const SIDEBAR_CONFIG = {
       icon: LayoutDashboard,
       roles: ["admin", "teacher", "student", "hod"],
       items: [{ title: "Overview", url: "/dashboard" }],
+    },
+    {
+      title: "Announcements",
+      url: "/announcements",
+      icon: Megaphone,
+      roles: ["admin", "teacher", "student", "hod"],
+      items: [{ title: "View All", url: "/announcements" }],
     },
     {
       title: "Academics",

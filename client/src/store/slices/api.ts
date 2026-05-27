@@ -23,6 +23,7 @@ export const apiSlice = createApi({
     "Timetable",
     "Attendance",
     "Activities",
+    "Announcement",
   ],
   endpoints: () => ({}),
 });

@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
-import { Save, Plus, Trash2, Clock, MapPin, Eraser } from "lucide-react";
+import { Save, Plus, Trash2, MapPin, Eraser } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CustomSelect } from "../common/custom-select";
 import CustomAlert from "../common/custom-alert";
+import { TimePicker } from "../common/time-picker";
 
 import { useGetSubjectsQuery } from "@/store/slices/subjectApi";
 import { useGetUsersQuery } from "@/store/slices/userApi";
@@ -262,39 +263,19 @@ export default function TimetableManager({
             key={index}
             className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-zinc-50/50 dark:bg-zinc-950/20 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800"
           >
-            <div className="md:col-span-2 space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-                <Clock className="w-3 h-3" /> Start
-              </label>
-              <Input
-                type="time"
+            <div className="md:col-span-2">
+              <TimePicker
+                label="Start"
                 value={minutesToTime(period.startMinutes)}
-                onChange={(e) =>
-                  updatePeriod(
-                    index,
-                    "startMinutes",
-                    timeToMinutes(e.target.value),
-                  )
-                }
-                className="rounded-lg h-10"
+                onChange={(val) => updatePeriod(index, "startMinutes", timeToMinutes(val))}
               />
             </div>
 
-            <div className="md:col-span-2 space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-                <Clock className="w-3 h-3" /> End
-              </label>
-              <Input
-                type="time"
+            <div className="md:col-span-2">
+              <TimePicker
+                label="End"
                 value={minutesToTime(period.endMinutes)}
-                onChange={(e) =>
-                  updatePeriod(
-                    index,
-                    "endMinutes",
-                    timeToMinutes(e.target.value),
-                  )
-                }
-                className="rounded-lg h-10"
+                onChange={(val) => updatePeriod(index, "endMinutes", timeToMinutes(val))}
               />
             </div>
 

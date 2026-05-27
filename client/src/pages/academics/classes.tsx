@@ -15,6 +15,8 @@ import ClassTable from "@/components/classes/class-table";
 import ClassForm from "@/components/classes/class-form";
 import CustomAlert from "@/components/common/custom-alert";
 
+import { PageHeader } from "@/components/common/page-header";
+
 const Classes = () => {
   // 1. Get user info from Redux store
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
@@ -67,34 +69,30 @@ const Classes = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <GraduationCap className="h-6 w-6 text-primary" />
-            <h1 className="text-3xl font-bold tracking-tight">Classes</h1>
-          </div>
-          <p className="text-muted-foreground">
-            {userInfo?.departmentId
-              ? `Managing classes for your department.`
-              : "Configure class sessions, semester levels, and teacher-student ratios."}
-          </p>
-        </div>
-        <div className="flex gap-2 items-center">
-          <Search
-            search={search}
-            setSearch={setSearch}
-            title="Search Classes..."
-          />
-          <Button
-            onClick={() => {
-              setEditingClass(null);
-              setIsFormOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Create Class
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Classes"
+        description={
+          userInfo?.departmentId
+            ? `Managing classes for your department.`
+            : "Configure class sessions, semester levels, and teacher-student ratios."
+        }
+        icon={<GraduationCap className="h-6 w-6" />}
+      >
+        <Search
+          search={search}
+          setSearch={setSearch}
+          title="Search Classes..."
+        />
+        <Button
+          onClick={() => {
+            setEditingClass(null);
+            setIsFormOpen(true);
+          }}
+          className="rounded-xl"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Create Class
+        </Button>
+      </PageHeader>
 
       <ClassTable
         data={data?.classes || []}

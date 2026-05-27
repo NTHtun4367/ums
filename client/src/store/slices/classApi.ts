@@ -25,7 +25,7 @@ export const classApi = apiSlice.injectEndpoints({
     // Get Single Class (Admin Only per backend)
     getClassById: builder.query<Class, string>({
       query: (id) => `/classes/${id}`,
-      providesTags: (result, error, id) => [{ type: "Class", id }],
+      providesTags: (_result, _error, id) => [{ type: "Class", id }],
     }),
 
     // Create Class

@@ -17,6 +17,9 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import { CustomSelect } from "@/components/common/custom-select";
 
+import { PageHeader } from "@/components/common/page-header";
+import { Users as UsersIcon } from "lucide-react";
+
 interface Props {
   role: UserRole;
   title: string;
@@ -95,23 +98,24 @@ export default function UserManagementPage({
 
   return (
     <div className="p-6 space-y-6">
+      <PageHeader
+        title={title}
+        description={description}
+        icon={<UsersIcon className="h-6 w-6" />}
+        className="capitalize"
+      >
+        <Button
+          onClick={() => {
+            setEditingUser(null);
+            setIsFormOpen(true);
+          }}
+          className="rounded-xl"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Add {role}
+        </Button>
+      </PageHeader>
+
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight capitalize">
-              {title}
-            </h1>
-            <p className="text-muted-foreground">{description}</p>
-          </div>
-          <Button
-            onClick={() => {
-              setEditingUser(null);
-              setIsFormOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add {role}
-          </Button>
-        </div>
         {/* Filter Section - Optimized Grid for Search, Selects, and Reset */}
         <div className="flex flex-wrap items-end gap-4 bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border">
           {/* Search - Flexible Width */}

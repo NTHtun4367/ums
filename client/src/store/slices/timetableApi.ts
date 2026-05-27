@@ -34,7 +34,7 @@ export const timetableApi = apiSlice.injectEndpoints({
 
       transformResponse: (response: TimetableResponse) => response.data,
 
-      providesTags: (result, error, arg) => [{ type: "Timetable", id: arg }],
+      providesTags: (_result, _error, arg) => [{ type: "Timetable", id: arg }],
     }),
 
     saveTimetableDay: builder.mutation<any, SaveTimetablePayload>({
@@ -44,7 +44,7 @@ export const timetableApi = apiSlice.injectEndpoints({
         body,
       }),
 
-      invalidatesTags: (result, error, arg) => [
+      invalidatesTags: (_result, _error, arg) => [
         { type: "Timetable", id: arg.classId },
       ],
     }),

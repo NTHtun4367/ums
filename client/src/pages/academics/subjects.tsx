@@ -12,6 +12,8 @@ import { SubjectTable } from "@/components/subjects/subject-table";
 import { SubjectForm } from "@/components/subjects/subject-form";
 import CustomAlert from "@/components/common/custom-alert";
 
+import { PageHeader } from "@/components/common/page-header";
+
 function SubjectsPage() {
   const [search, setSearch] = useState("");
   const [queryParams, setQueryParams] = useState({
@@ -49,32 +51,26 @@ function SubjectsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <BookMarked className="h-6 w-6 text-primary" />
-            <h1 className="text-3xl font-bold tracking-tight">Subjects</h1>
-          </div>
-          <p className="text-muted-foreground">
-            Manage the academic curriculum and subject codes per department.
-          </p>
-        </div>
-        <div className="flex gap-3 items-center">
-          <Search
-            search={search}
-            setSearch={setSearch}
-            title="Search subjects..."
-          />
-          <Button
-            onClick={() => {
-              setEditingSubject(null);
-              setIsFormOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Create Subject
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Subjects"
+        description="Manage the academic curriculum and subject codes per department."
+        icon={<BookMarked className="h-6 w-6" />}
+      >
+        <Search
+          search={search}
+          setSearch={setSearch}
+          title="Search subjects..."
+        />
+        <Button
+          onClick={() => {
+            setEditingSubject(null);
+            setIsFormOpen(true);
+          }}
+          className="rounded-xl"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Create Subject
+        </Button>
+      </PageHeader>
 
       <SubjectTable
         data={data?.subjects || []}

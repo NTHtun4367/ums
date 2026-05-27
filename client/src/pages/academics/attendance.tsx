@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import {
@@ -15,7 +15,6 @@ import {
 import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -40,6 +39,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/common/page-header";
 
 import { useGetDepartmentsQuery } from "@/store/slices/departmentApi";
 import { useGetClassesQuery } from "@/store/slices/classApi";
@@ -54,9 +54,7 @@ import { useGetAcademicYearsQuery } from "@/store/slices/academicYearApi";
 import type { RootState } from "@/store";
 import type {
   User,
-  Class,
   Department,
-  Subject,
   AttendanceStatus,
   Attendance,
 } from "@/types/type";
@@ -250,22 +248,12 @@ export default function AttendancePage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-zinc-900 border p-6 rounded-2xl shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-primary/10 text-primary">
-            <ClipboardCheck className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-              Attendance Matrix
-            </h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-              Record and track student session attendance.
-            </p>
-          </div>
-        </div>
+    <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
+      <PageHeader
+        title="Attendance Management"
+        description="Track and manage student daily attendance records."
+        icon={<ClipboardCheck className="h-6 w-6" />}
+      >
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
@@ -278,17 +266,21 @@ export default function AttendancePage() {
           </Button>
           <Button
             onClick={handleSave}
-            disabled={isSaving || !selectedSubject}
-            className="rounded-xl px-8 shadow-lg shadow-primary/20"
+            disabled={
+              isSaving ||
+              !selectedClass ||
+              !selectedSubject ||
+              (studentData?.users?.length || 0) === 0
+            }
+            className="rounded-xl flex gap-2"
           >
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="w-4 h-4" />
             {isSaving ? "Saving..." : "Save Attendance"}
           </Button>
         </div>
-      </div>
+      </PageHeader>
 
-      {/* FILTERS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 bg-white dark:bg-zinc-900 border p-6 rounded-2xl shadow-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="space-y-2">
           <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">
             Department
