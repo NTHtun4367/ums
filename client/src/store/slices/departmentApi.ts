@@ -16,6 +16,11 @@ export const departmentApi = apiSlice.injectEndpoints({
       }),
       providesTags: ["Department"],
     }),
+    getDepartmentById: builder.query<Department, string>({
+      query: (id) => `/departments/${id}`,
+      transformResponse: (response: { success: boolean; data: Department }) => response.data,
+      providesTags: (_result, _error, id) => [{ type: "Department", id }],
+    }),
     createDepartment: builder.mutation<
       { message: string },
       DepartmentFormValues
@@ -50,6 +55,7 @@ export const departmentApi = apiSlice.injectEndpoints({
 
 export const {
   useGetDepartmentsQuery,
+  useGetDepartmentByIdQuery,
   useCreateDepartmentMutation,
   useUpdateDepartmentMutation,
   useDeleteDepartmentMutation,

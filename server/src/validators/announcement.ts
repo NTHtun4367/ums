@@ -1,5 +1,5 @@
 import { body } from "express-validator";
-import { AnnouncementTarget } from "../models/announcement";
+import { AnnouncementTarget, AnnouncementVisibility } from "../models/announcement";
 import { isValidObjectId } from "./common";
 
 export const announcementValidator = [
@@ -12,12 +12,21 @@ export const announcementValidator = [
 
   body("content").trim().notEmpty().withMessage("Content is required"),
 
+  body("image").optional().isString().withMessage("Image must be a string URL"),
+
   body("target")
     .trim()
     .notEmpty()
     .withMessage("Target is required")
     .isIn(Object.values(AnnouncementTarget))
     .withMessage("Invalid target audience"),
+
+  body("visibility")
+    .trim()
+    .notEmpty()
+    .withMessage("Visibility is required")
+    .isIn(Object.values(AnnouncementVisibility))
+    .withMessage("Invalid visibility type"),
 
   body("departmentId")
     .optional({ checkFalsy: true })

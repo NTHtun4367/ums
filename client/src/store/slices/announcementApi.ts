@@ -10,16 +10,25 @@ export const AnnouncementTarget = {
 
 export type AnnouncementTarget = (typeof AnnouncementTarget)[keyof typeof AnnouncementTarget];
 
+export const AnnouncementVisibility = {
+  PUBLIC: "public",
+  PRIVATE: "private",
+} as const;
+
+export type AnnouncementVisibility = (typeof AnnouncementVisibility)[keyof typeof AnnouncementVisibility];
+
 export interface Announcement {
   _id: string;
   title: string;
   content: string;
+  image?: string;
   authorId: {
     _id: string;
     name: string;
     role: string;
   };
   target: AnnouncementTarget;
+  visibility: AnnouncementVisibility;
   departmentId?: {
     _id: string;
     name: string;

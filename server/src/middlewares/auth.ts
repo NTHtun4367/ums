@@ -20,8 +20,8 @@ export const protect = asyncHandler(
     const token = req.cookies.token;
 
     if (!token) {
-      res.status(401);
-      throw new Error("Unauthorized. No token provided.");
+      req.user = undefined;
+      return next();
     }
 
     try {
@@ -34,20 +34,30 @@ export const protect = asyncHandler(
         .lean();
 
       if (!user) {
-        res.status(401);
-        throw new Error("User not found.");
+        req.user = undefined;
+        return next();
       }
 
       // 4. Attach user to request object
-      // We cast to unknown then IUser to satisfy TypeScript while using .lean()
       req.user = user as unknown as IUser;
       next();
     } catch (error) {
-      res.status(401);
-      throw new Error("Unauthorized. Invalid token.");
+      req.user = undefined;
+      next();
     }
   },
 );
+
+/**
+ * Middleware to ensure user is authenticated
+ */
+export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    res.status(401);
+    throw new Error("Unauthorized. Please log in.");
+  }
+  next();
+};
 
 /**
  * Middleware to authorize specific roles

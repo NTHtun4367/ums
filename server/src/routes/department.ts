@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { authorize, protect } from "../middlewares/auth";
+import { authorize, protect, authenticate } from "../middlewares/auth";
 
 import {
   createDepartment,
@@ -18,14 +18,13 @@ import { validateRequest } from "../middlewares/validate";
 
 const router = Router();
 
-router.use(protect);
+// Shared Access (Public for landing, Private for dashboard)
 
-// Shared Access
-
-router.get("/", getDepartments);
+router.get("/", protect, getDepartments);
 
 router.get(
   "/:id",
+  protect,
   validateMongoIdParam("id"),
   validateRequest,
   getDepartmentById,
@@ -33,7 +32,7 @@ router.get(
 
 // Admin Only
 
-router.use(authorize([UserRole.ADMIN]));
+router.use(protect, authenticate, authorize([UserRole.ADMIN]));
 
 router.post("/create", validateDepartment, validateRequest, createDepartment);
 

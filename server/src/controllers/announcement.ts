@@ -1,21 +1,28 @@
 import { Request, Response } from "express";
 import asyncHandler from "../utils/asyncHandler";
-import { Announcement, AnnouncementTarget } from "../models/announcement";
+import { Announcement, AnnouncementTarget, AnnouncementVisibility } from "../models/announcement";
 import { AuthRequest } from "../middlewares/auth";
 import { UserRole } from "../models/user";
 import { logActivity } from "../utils/activitieslog";
+import { uploadToCloudinary } from "../config/cloudinary";
 
 /**
  * @desc Get all announcements (filtered by target for non-admins)
  * @route GET /api/announcements
- * @access Private
+ * @access Public/Private
  */
 export const getAnnouncements = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const user = req.user!;
+  const user = req.user; // User might be undefined for public access
   const query: any = { isActive: true };
 
-  // For non-admins, filter based on target
-  if (user.role !== UserRole.ADMIN) {
+  // If user is not logged in, only show PUBLIC announcements
+  if (!user) {
+    query.visibility = AnnouncementVisibility.PUBLIC;
+    query.target = AnnouncementTarget.ALL;
+    query.$or = [{ expiresAt: { $exists: false } }, { expiresAt: { $gt: new Date() } }];
+  } 
+  // For logged-in non-admins, filter based on target
+  else if (user.role !== UserRole.ADMIN) {
     const orConditions: any[] = [
       { target: AnnouncementTarget.ALL },
       { target: user.role }, // Match specific role (teacher, student, hod)
@@ -51,14 +58,21 @@ export const getAnnouncements = asyncHandler(async (req: AuthRequest, res: Respo
  * @access Private/Admin
  */
 export const createAnnouncement = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { title, content, target, departmentId, expiresAt } = req.body;
+  const { title, content, target, visibility, departmentId, expiresAt, image } = req.body;
+
+  let imageUrl = undefined;
+  if (image) {
+    imageUrl = await uploadToCloudinary(image, "announcements");
+  }
 
   const announcement = await Announcement.create({
     title,
     content,
     target,
+    visibility,
     departmentId,
     expiresAt,
+    image: imageUrl,
     authorId: req.user!._id,
   });
 
@@ -81,11 +95,17 @@ export const createAnnouncement = asyncHandler(async (req: AuthRequest, res: Res
  */
 export const updateAnnouncement = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { title, content, target, departmentId, expiresAt, isActive } = req.body;
+  const { title, content, target, visibility, departmentId, expiresAt, isActive, image } = req.body;
+
+  let updateData: any = { title, content, target, visibility, departmentId, expiresAt, isActive };
+
+  if (image && !image.startsWith("http")) {
+    updateData.image = await uploadToCloudinary(image, "announcements");
+  }
 
   const announcement = await Announcement.findByIdAndUpdate(
     id,
-    { title, content, target, departmentId, expiresAt, isActive },
+    updateData,
     { new: true, runValidators: true }
   );
 

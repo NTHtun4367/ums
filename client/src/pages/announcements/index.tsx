@@ -1,33 +1,35 @@
 import { useState } from "react";
-import { 
-  useGetAnnouncementsQuery, 
-  useCreateAnnouncementMutation, 
-  useUpdateAnnouncementMutation, 
+import {
+  useGetAnnouncementsQuery,
+  useCreateAnnouncementMutation,
+  useUpdateAnnouncementMutation,
   useDeleteAnnouncementMutation,
   AnnouncementTarget
 } from "@/store/slices/announcementApi";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
-import { 
-  Megaphone, 
-  Plus, 
-  Calendar, 
-  User, 
-  MoreVertical, 
-  Trash2, 
+import {
+  Megaphone,
+  Plus,
+  Calendar,
+  User,
+  MoreVertical,
+  Trash2,
   Edit2,
   Clock,
   Building,
-  Eye
+  Eye,
+  Globe,
+  Lock
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import CustomModal from "@/components/common/custom-modal";
@@ -133,13 +135,13 @@ export default function AnnouncementsPage() {
         icon={<Megaphone className="w-6 h-6" />}
       >
         {isAdmin && (
-          <Button 
+          <Button
             onClick={() => {
               setIsEdit(false);
               setIsView(false);
               setSelectedAnnouncement(null);
               setIsModalOpen(true);
-            }} 
+            }}
             className="rounded-xl flex gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -153,19 +155,35 @@ export default function AnnouncementsPage() {
           announcements.map((announcement) => (
             <Card key={announcement._id} className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-all">
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    {getTargetBadge(announcement.target)}
-                    {announcement.departmentId && (
-                      <Badge variant="secondary" className="flex gap-1 items-center">
-                        <Building className="w-3 h-3" />
-                        {announcement.departmentId.name}
-                      </Badge>
-                    )}
+                <div className="flex gap-4">
+                  {announcement.image && (
+                    <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-slate-100">
+                      <img src={announcement.image} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      {getTargetBadge(announcement.target)}
+                      {announcement.visibility === "public" ? (
+                        <Badge variant="outline" className="flex gap-1 items-center border-primary text-primary">
+                          <Globe className="w-3 h-3" /> Public
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="flex gap-1 items-center border-amber-500 text-amber-500">
+                          <Lock className="w-3 h-3" /> Private
+                        </Badge>
+                      )}
+                      {announcement.departmentId && (
+                        <Badge variant="secondary" className="flex gap-1 items-center">
+                          <Building className="w-3 h-3" />
+                          {announcement.departmentId.name}
+                        </Badge>
+                      )}
+                    </div>
+                    <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors">
+                      {announcement.title}
+                    </CardTitle>
                   </div>
-                  <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors">
-                    {announcement.title}
-                  </CardTitle>
                 </div>
                 {isAdmin && (
                   <DropdownMenu>
@@ -189,7 +207,7 @@ export default function AnnouncementsPage() {
                 <p className="text-muted-foreground line-clamp-2 leading-relaxed">
                   {announcement.content}
                 </p>
-                
+
                 <div className="pt-4 flex flex-wrap items-center gap-6 text-xs text-muted-foreground border-t border-slate-50 dark:border-slate-800">
                   <div className="flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5" />
@@ -234,6 +252,15 @@ export default function AnnouncementsPage() {
             <div className="space-y-2">
               <div className="flex gap-2 mb-4">
                 {getTargetBadge(selectedAnnouncement?.target)}
+                {selectedAnnouncement?.visibility === "public" ? (
+                  <Badge variant="outline" className="flex gap-1 items-center border-primary text-primary">
+                    <Globe className="w-3 h-3" /> Public
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="flex gap-1 items-center border-amber-500 text-amber-500">
+                    <Lock className="w-3 h-3" /> Private
+                  </Badge>
+                )}
                 {selectedAnnouncement?.departmentId && (
                   <Badge variant="secondary">{selectedAnnouncement.departmentId.name}</Badge>
                 )}
@@ -244,6 +271,11 @@ export default function AnnouncementsPage() {
                 <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {selectedAnnouncement && format(new Date(selectedAnnouncement.createdAt), "PPP")}</span>
               </div>
             </div>
+            {selectedAnnouncement?.image && (
+              <div className="rounded-2xl overflow-hidden border border-slate-100 max-h-[400px]">
+                <img src={selectedAnnouncement.image} alt={selectedAnnouncement.title} className="w-full h-full object-contain bg-slate-50" />
+              </div>
+            )}
             <div className="prose prose-slate dark:prose-invert max-w-none">
               <p className="whitespace-pre-wrap leading-relaxed text-slate-600 dark:text-slate-400">
                 {selectedAnnouncement?.content}

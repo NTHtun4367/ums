@@ -8,11 +8,18 @@ export enum AnnouncementTarget {
   DEPARTMENT = "department",
 }
 
+export enum AnnouncementVisibility {
+  PUBLIC = "public", // Shows on landing page
+  PRIVATE = "private", // Only for logged-in users
+}
+
 export interface IAnnouncement extends Document {
   title: string;
   content: string;
+  image?: string;
   authorId: Types.ObjectId;
   target: AnnouncementTarget;
+  visibility: AnnouncementVisibility;
   departmentId?: Types.ObjectId;
   expiresAt?: Date;
   isActive: boolean;
@@ -33,6 +40,9 @@ const announcementSchema = new Schema<IAnnouncement>(
       required: true,
       trim: true,
     },
+    image: {
+      type: String,
+    },
     authorId: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -44,6 +54,13 @@ const announcementSchema = new Schema<IAnnouncement>(
       enum: Object.values(AnnouncementTarget),
       default: AnnouncementTarget.ALL,
       required: true,
+    },
+    visibility: {
+      type: String,
+      enum: Object.values(AnnouncementVisibility),
+      default: AnnouncementVisibility.PRIVATE,
+      required: true,
+      index: true,
     },
     departmentId: {
       type: Schema.Types.ObjectId,

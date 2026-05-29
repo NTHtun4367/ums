@@ -2,11 +2,11 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Image as ImageIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CustomInput from "@/components/common/custom-input";
 import { CustomSelect } from "@/components/common/custom-select";
-import { AnnouncementTarget } from "@/store/slices/announcementApi";
+import { AnnouncementTarget, AnnouncementVisibility } from "@/store/slices/announcementApi";
 import { useGetDepartmentsQuery } from "@/store/slices/departmentApi";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
@@ -17,11 +17,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 const announcementSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title is too long"),
   content: z.string().min(1, "Content is required"),
   target: z.nativeEnum(AnnouncementTarget),
+  visibility: z.nativeEnum(AnnouncementVisibility),
   departmentId: z.string().optional(),
   expiresAt: z.date().optional().nullable(),
   isActive: z.boolean(),
@@ -38,6 +40,7 @@ interface AnnouncementFormProps {
 export function AnnouncementForm({ initialData, onSubmit, isLoading }: AnnouncementFormProps) {
   const { data: deptData } = useGetDepartmentsQuery({ page: 1, limit: 100 });
   const departments = deptData?.departments || [];
+  const [previewImage, setPreviewImage] = useState<string | null>(initialData?.image || null);
 
   const { control, handleSubmit, watch } = useForm<AnnouncementFormValues>({
     resolver: zodResolver(announcementSchema),
@@ -45,6 +48,7 @@ export function AnnouncementForm({ initialData, onSubmit, isLoading }: Announcem
       title: initialData?.title || "",
       content: initialData?.content || "",
       target: initialData?.target || AnnouncementTarget.ALL,
+      visibility: initialData?.visibility || AnnouncementVisibility.PRIVATE,
       departmentId: initialData?.departmentId?._id || "",
       expiresAt: initialData?.expiresAt ? new Date(initialData.expiresAt) : null,
       isActive: initialData?.isActive ?? true,
@@ -53,11 +57,22 @@ export function AnnouncementForm({ initialData, onSubmit, isLoading }: Announcem
 
   const selectedTarget = watch("target");
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleFormSubmit = (data: AnnouncementFormValues) => {
-    // Convert Date object back to ISO string if it exists
     const formattedData = {
       ...data,
       expiresAt: data.expiresAt ? data.expiresAt.toISOString() : undefined,
+      image: previewImage,
     };
     onSubmit(formattedData);
   };
@@ -70,6 +85,39 @@ export function AnnouncementForm({ initialData, onSubmit, isLoading }: Announcem
         label="Title"
         placeholder="Enter announcement title"
       />
+
+      <div className="grid grid-cols-2 gap-4">
+        <CustomSelect
+          control={control}
+          name="visibility"
+          label="Portal Visibility"
+          options={[
+            { label: "Public (Portal & Dashboard)", value: AnnouncementVisibility.PUBLIC },
+            { label: "Private (Dashboard Only)", value: AnnouncementVisibility.PRIVATE },
+          ]}
+        />
+        <CustomSelect
+          control={control}
+          name="target"
+          label="Target Audience"
+          options={[
+            { label: "Everyone", value: AnnouncementTarget.ALL },
+            { label: "Teachers", value: AnnouncementTarget.TEACHER },
+            { label: "Students", value: AnnouncementTarget.STUDENT },
+            { label: "HODs", value: AnnouncementTarget.HOD },
+            { label: "Specific Department", value: AnnouncementTarget.DEPARTMENT },
+          ]}
+        />
+      </div>
+
+      {selectedTarget === AnnouncementTarget.DEPARTMENT && (
+        <CustomSelect
+          control={control}
+          name="departmentId"
+          label="Department"
+          options={departments.map((d: any) => ({ label: d.name, value: d._id }))}
+        />
+      )}
 
       <Controller
         name="content"
@@ -91,28 +139,28 @@ export function AnnouncementForm({ initialData, onSubmit, isLoading }: Announcem
         )}
       />
 
-      <div className="grid grid-cols-2 gap-4">
-        <CustomSelect
-          control={control}
-          name="target"
-          label="Target Audience"
-          options={[
-            { label: "Everyone", value: AnnouncementTarget.ALL },
-            { label: "Teachers", value: AnnouncementTarget.TEACHER },
-            { label: "Students", value: AnnouncementTarget.STUDENT },
-            { label: "HODs", value: AnnouncementTarget.HOD },
-            { label: "Specific Department", value: AnnouncementTarget.DEPARTMENT },
-          ]}
-        />
-
-        {selectedTarget === AnnouncementTarget.DEPARTMENT && (
-          <CustomSelect
-            control={control}
-            name="departmentId"
-            label="Department"
-            options={departments.map((d: any) => ({ label: d.name, value: d._id }))}
-          />
-        )}
+      <div className="space-y-2">
+        <FieldLabel>Attachment (Optional)</FieldLabel>
+        <div className="flex items-center gap-4">
+          {previewImage ? (
+            <div className="relative w-32 h-32 rounded-xl overflow-hidden border border-zinc-200">
+              <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="absolute top-1 right-1 p-1 bg-white/80 rounded-full hover:bg-white text-destructive shadow-sm"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <label className="w-32 h-32 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-200 hover:border-primary hover:bg-slate-50 cursor-pointer transition-all">
+              <ImageIcon className="w-6 h-6 text-zinc-400" />
+              <span className="text-[10px] font-bold uppercase text-zinc-500">Upload</span>
+              <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+            </label>
+          )}
+        </div>
       </div>
 
       <Controller
