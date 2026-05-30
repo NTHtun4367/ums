@@ -40,9 +40,7 @@ export default function LoginForm({
   // Redirect if already logged in
   useEffect(() => {
     if (userInfo) {
-      console.log("Hello");
-      
-      navigate("/", { replace: true });
+      navigate("/app", { replace: true });
     }
   }, [navigate, userInfo]);
 

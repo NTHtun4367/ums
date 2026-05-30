@@ -17,10 +17,35 @@ import SubjectsPage from "./pages/academics/subjects";
 import DepartmentPage from "./pages/academics/departments";
 import AttendancePage from "./pages/academics/attendance";
 import AnnouncementsPage from "./pages/announcements";
+import LandingPage from "./pages/landing";
+import DepartmentPortalPage from "./pages/department-portal";
+import AboutPage from "./pages/about";
+import AdmissionsPage from "./pages/admissions";
+import CampusLifePage from "./pages/campus-life";
 
 const router = createBrowserRouter([
   {
     path: "/",
+    element: <LandingPage />,
+  },
+  {
+    path: "/about",
+    element: <AboutPage />,
+  },
+  {
+    path: "/admissions",
+    element: <AdmissionsPage />,
+  },
+  {
+    path: "/campus-life",
+    element: <CampusLifePage />,
+  },
+  {
+    path: "/departments/:id",
+    element: <DepartmentPortalPage />,
+  },
+  {
+    path: "/app",
     element: (
       <Protect>
         <Main />

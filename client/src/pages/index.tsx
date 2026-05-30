@@ -272,7 +272,7 @@ function Index() {
               </CardTitle>
               <CardDescription>Important updates and notices</CardDescription>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/announcements")} className="text-primary gap-1">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/app/announcements")} className="text-primary gap-1">
               View All <ArrowRight className="w-4 h-4" />
             </Button>
           </CardHeader>

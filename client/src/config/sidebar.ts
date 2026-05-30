@@ -16,17 +16,17 @@ export const SIDEBAR_CONFIG = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/app/dashboard",
       icon: LayoutDashboard,
       roles: ["admin", "teacher", "student", "hod"],
-      items: [{ title: "Overview", url: "/dashboard" }],
+      items: [{ title: "Overview", url: "/app/dashboard" }],
     },
     {
       title: "Announcements",
-      url: "/announcements",
+      url: "/app/announcements",
       icon: Megaphone,
       roles: ["admin", "teacher", "student", "hod"],
-      items: [{ title: "View All", url: "/announcements" }],
+      items: [{ title: "View All", url: "/app/announcements" }],
     },
     {
       title: "Academics",
@@ -36,27 +36,27 @@ export const SIDEBAR_CONFIG = {
       items: [
         {
           title: "Departments",
-          url: "/departments",
+          url: "/app/departments",
           roles: ["admin"],
         },
         {
           title: "Classes",
-          url: "/classes",
+          url: "/app/classes",
           roles: ["admin", "teacher", "hod"],
         },
         {
           title: "Subjects",
-          url: "/subjects",
+          url: "/app/subjects",
           roles: ["admin", "teacher", "hod"],
         },
         {
           title: "Timetable",
-          url: "/timetable",
+          url: "/app/timetable",
           roles: ["admin", "teacher", "student", "hod"],
         },
         {
           title: "Attendance",
-          url: "/attendance",
+          url: "/app/attendance",
           roles: ["admin", "teacher", "hod", "student"],
         },
       ],
@@ -67,10 +67,10 @@ export const SIDEBAR_CONFIG = {
       icon: Users,
       roles: ["admin", "hod"],
       items: [
-        { title: "Students", url: "/users/students", roles: ["admin", "hod"] },
-        { title: "Teachers", url: "/users/teachers", roles: ["admin", "hod"] },
-        { title: "Heads of Dept", url: "/users/hods", roles: ["admin"] },
-        { title: "Admins", url: "/users/admins", roles: ["admin"] },
+        { title: "Students", url: "/app/users/students", roles: ["admin", "hod"] },
+        { title: "Teachers", url: "/app/users/teachers", roles: ["admin", "hod"] },
+        { title: "Heads of Dept", url: "/app/users/hods", roles: ["admin"] },
+        { title: "Admins", url: "/app/users/admins", roles: ["admin"] },
       ],
     },
     {
@@ -79,8 +79,8 @@ export const SIDEBAR_CONFIG = {
       icon: Banknote,
       roles: ["admin"],
       items: [
-        { title: "Fees", url: "/finance/fees", roles: ["admin"] },
-        { title: "Salary", url: "/finance/salary", roles: ["admin"] },
+        { title: "Fees", url: "/app/finance/fees", roles: ["admin"] },
+        { title: "Salary", url: "/app/finance/salary", roles: ["admin"] },
       ],
     },
     {
@@ -91,10 +91,10 @@ export const SIDEBAR_CONFIG = {
       items: [
         {
           title: "Academic Years",
-          url: "/settings/academic-years",
+          url: "/app/settings/academic-years",
           roles: ["admin"],
         },
-        { title: "General", url: "/settings/general", roles: ["admin"] },
+        { title: "General", url: "/app/settings/general", roles: ["admin"] },
       ],
     },
   ],
