@@ -1,35 +1,37 @@
 import { useParams, Link } from "react-router";
-import { 
-  useGetDepartmentByIdQuery 
+import { useState, useMemo, useEffect } from "react";
+import {
+  useGetDepartmentByIdQuery
 } from "@/store/slices/departmentApi";
-import { 
-  useGetUsersQuery 
+import {
+  useGetUsersQuery
 } from "@/store/slices/userApi";
-import { 
-  useGetSubjectsQuery 
+import {
+  useGetSubjectsQuery
 } from "@/store/slices/subjectApi";
-import { 
-  GraduationCap, 
-  Users, 
-  BookOpen, 
-  Building2, 
+import {
+  GraduationCap,
+  Users,
+  BookOpen,
+  Building2,
   ArrowLeft,
   Mail,
   Phone,
   User as UserIcon,
-  ChevronRight
+  ChevronRight,
+  ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMemo } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export default function DepartmentPortalPage() {
   const { id } = useParams();
-  
+
   const { data: department, isLoading: deptLoading } = useGetDepartmentByIdQuery(id!);
-  
+
   const { data: teachersData, isLoading: teachersLoading } = useGetUsersQuery({
     page: 1,
     limit: 10,
@@ -43,34 +45,81 @@ export default function DepartmentPortalPage() {
     departmentId: id!,
   });
 
+  // Extracts academic year and semester directly based on individual digits
   const getSemesterFromCode = (code: string): { year: number; semester: number } => {
-    const match = code.match(/^\d{2}/);
+    const match = code.match(/\d+/);
     if (match) {
-      const num = parseInt(match[0], 10);
-      const year = Math.ceil(num / 2);
-      const semester = num % 2 === 0 ? 2 : 1;
+      const digits = match[0];
+
+      // The absolute first number determines the curriculum level year (e.g. 1xxxx -> Year 1, 2xxxx -> Year 2)
+      const year = parseInt(digits.charAt(0), 10);
+
+      // The second number indicates the path semester group
+      const secondDigit = digits.length >= 2 ? parseInt(digits.charAt(1), 10) : 1;
+      const semester = secondDigit % 2 === 0 ? 2 : 1;
+
       return { year, semester };
     }
     return { year: 0, semester: 0 };
   };
 
+  const getYearName = (year: number): string => {
+    const yearNames = ["", "First Year", "Second Year", "Third Year", "Fourth Year", "Fifth Year", "Sixth Year"];
+    return yearNames[year] || `Year ${year}`;
+  };
+
   const categorizedSubjects = useMemo(() => {
     if (!subjectsData?.subjects) return {};
-    
-    const categories: Record<string, typeof subjectsData.subjects> = {};
-    
+
+    const categories: Record<string, Record<number, typeof subjectsData.subjects>> = {};
+
+    // Hard seed explicit ordered tracking structure
+    const structuralOrder = ["First Year", "Second Year", "Third Year", "Fourth Year", "Fifth Year", "Sixth Year"];
+    structuralOrder.forEach(year => {
+      categories[year] = {};
+    });
+
     subjectsData.subjects.forEach((subject) => {
       const { year, semester } = getSemesterFromCode(subject.code);
-      const key = year > 0 ? `Year ${year}, Semester ${semester}` : "Other";
-      
-      if (!categories[key]) {
-        categories[key] = [];
+      const yearKey = year > 0 ? getYearName(year) : "Other";
+
+      if (!categories[yearKey]) {
+        categories[yearKey] = {};
       }
-      categories[key].push(subject);
+      if (!categories[yearKey][semester]) {
+        categories[yearKey][semester] = [];
+      }
+      categories[yearKey][semester].push(subject);
     });
-    
+
+    // Strip unpopulated tracking years safely out of view
+    Object.keys(categories).forEach(key => {
+      if (Object.keys(categories[key]).length === 0) {
+        delete categories[key];
+      }
+    });
+
     return categories;
   }, [subjectsData]);
+
+  const [openYears, setOpenYears] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (categorizedSubjects) {
+      const initialState: Record<string, boolean> = {};
+      Object.keys(categorizedSubjects).forEach((key) => {
+        initialState[key] = key === "First Year";
+      });
+      setOpenYears(initialState);
+    }
+  }, [categorizedSubjects]);
+
+  const toggleYear = (year: string) => {
+    setOpenYears(prev => ({
+      ...prev,
+      [year]: !prev[year]
+    }));
+  };
 
   if (deptLoading) {
     return (
@@ -154,10 +203,10 @@ export default function DepartmentPortalPage() {
                 </div>
                 <h2 className="text-3xl font-bold">Expert Faculty</h2>
               </div>
-              
+
               <div className="grid sm:grid-cols-2 gap-6">
                 {teachersLoading ? (
-                  [1,2,3,4].map(i => <Skeleton key={i} className="h-48 rounded-3xl" />)
+                  [1, 2, 3, 4].map(i => <Skeleton key={i} className="h-48 rounded-3xl" />)
                 ) : teachersData?.users?.length ? (
                   teachersData.users.map((teacher) => (
                     <Card key={teacher._id} className="border-none shadow-sm bg-slate-50 rounded-3xl overflow-hidden hover:shadow-md transition-all">
@@ -202,32 +251,57 @@ export default function DepartmentPortalPage() {
               <div className="bg-slate-50 rounded-[2.5rem] p-8 md:p-12">
                 {subjectsLoading ? (
                   <div className="grid gap-4">
-                    {[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-2xl" />)}
+                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-2xl" />)}
                   </div>
                 ) : Object.keys(categorizedSubjects).length ? (
-                  <div className="space-y-8">
-                    {Object.entries(categorizedSubjects).map(([category, subjects]) => (
-                      <div key={category}>
-                        <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                          <Badge className="bg-primary text-white">{category}</Badge>
-                        </h3>
-                        <div className="grid gap-4">
-                          {subjects.map((subject) => (
-                            <div key={subject._id} className="bg-white p-6 rounded-2xl flex items-center justify-between group hover:shadow-sm transition-all border border-transparent hover:border-primary/20">
-                              <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 font-bold text-xs group-hover:bg-primary group-hover:text-white transition-colors">
-                                  {subject.code}
-                                </div>
-                                <div>
-                                  <h4 className="font-bold text-slate-900">{subject.name}</h4>
-                                  <p className="text-xs text-slate-500 font-medium">Semester {subject.semester}</p>
+                  <div className="space-y-6">
+                    {Object.entries(categorizedSubjects).map(([year, semesters]) => (
+                      <Collapsible
+                        key={year}
+                        open={!!openYears[year]}
+                        onOpenChange={() => toggleYear(year)}
+                        className="bg-white rounded-2xl overflow-hidden border border-slate-200"
+                      >
+                        <CollapsibleTrigger className="w-full flex items-center justify-between p-6 hover:bg-slate-50 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center shadow-sm">
+                              <GraduationCap className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800">{year}</h3>
+                          </div>
+                          <ChevronDown
+                            className={`w-5 h-5 text-slate-400 transition-transform ${openYears[year] ? "rotate-180" : ""}`}
+                          />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="px-6 pb-6">
+                          <div className="space-y-6">
+                            {Object.entries(semesters).map(([semester, subjects]) => (
+                              <div key={semester} className="pl-4 border-l-2 border-primary/20">
+                                <h4 className="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                                  <Badge className="bg-primary/10 text-primary">Semester {semester}</Badge>
+                                </h4>
+                                <div className="grid gap-3">
+                                  {subjects.map((subject) => (
+                                    <div key={subject._id} className="bg-slate-50 p-4 rounded-xl flex items-center justify-between group hover:bg-slate-100 transition-all">
+                                      {/* Enhanced dynamic layout flex wrappers ensuring full inline row execution */}
+                                      <div className="flex items-center gap-4 min-w-0 flex-1 mr-4">
+                                        <div className="w-16 h-9 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-500 font-bold text-xs shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+                                          {subject.code}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                          <h5 className="font-bold text-slate-800 truncate text-sm sm:text-base">{subject.name}</h5>
+                                          <p className="text-xs text-slate-500 font-medium truncate">Semester {subject.semester}</p>
+                                        </div>
+                                      </div>
+                                      <ChevronRight className="w-4 h-4 text-slate-400 shrink-0 group-hover:text-primary transition-colors" />
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
-                              <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-primary transition-colors" />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
                     ))}
                   </div>
                 ) : (
