@@ -23,8 +23,10 @@ interface SaveTimetablePayload {
     teacherId: string;
     startMinutes: number;
     endMinutes: number;
-    room: string;
+    room?: string;
   }[];
+  
+  room?: string;
 }
 
 export const timetableApi = apiSlice.injectEndpoints({

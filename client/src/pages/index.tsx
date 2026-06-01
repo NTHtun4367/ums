@@ -130,7 +130,7 @@ function Index() {
           const Icon = ICON_MAP[stat.icon] || Activity;
           return (
             <Card key={idx} className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-all duration-300">
-              <CardContent className="p-6">
+              <CardContent>
                 <div className="flex justify-between items-start">
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{stat.label}</p>

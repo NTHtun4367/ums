@@ -5,7 +5,7 @@ export interface IPeriod {
   teacherId: Types.ObjectId;
   startMinutes: number;
   endMinutes: number;
-  room: string;
+  room?: string;
 }
 
 export interface ITimetable extends Document {
@@ -21,6 +21,7 @@ export interface ITimetable extends Document {
     | "Sunday";
 
   periods: IPeriod[];
+  room?: string;
 }
 
 const periodSchema = new Schema<IPeriod>(
@@ -53,7 +54,7 @@ const periodSchema = new Schema<IPeriod>(
 
     room: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
       maxlength: 100,
     },
@@ -81,6 +82,13 @@ const timetableSchema = new Schema<ITimetable>(
         "Sunday",
       ],
       required: true,
+    },
+
+    room: {
+      type: String,
+      required: false,
+      trim: true,
+      maxlength: 100,
     },
 
     periods: {

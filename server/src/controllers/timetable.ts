@@ -10,19 +10,14 @@ import { Timetable } from "../models/timetable";
 
 export const saveTimetable = asyncHandler(
   async (req: Request, res: Response) => {
-    const { classId, day, periods } = req.body;
+    const { classId, day, periods, room } = req.body;
 
     const formattedPeriods = periods
       .map((period: any) => ({
         subjectId: new Types.ObjectId(period.subjectId),
-
         teacherId: new Types.ObjectId(period.teacherId),
-
         startMinutes: Number(period.startMinutes),
-
         endMinutes: Number(period.endMinutes),
-
-        room: period.room.trim(),
       }))
       .sort((a: any, b: any) => a.startMinutes - b.startMinutes);
 
@@ -35,6 +30,7 @@ export const saveTimetable = asyncHandler(
         classId: new Types.ObjectId(classId),
         day,
         periods: formattedPeriods,
+        room: room?.trim() || undefined,
       },
       {
         upsert: true,

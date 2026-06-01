@@ -66,10 +66,17 @@ const TimetableView = ({ timetable }: ViewProps) => {
           return (
             <div key={day} className="p-6">
               {/* DAY HEADER */}
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="px-3 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 text-sm font-bold">
                   {day}
                 </div>
+                
+                {dayData?.room && (
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 text-sm font-medium">
+                    <MapPin className="w-4 h-4" />
+                    {dayData.room}
+                  </div>
+                )}
 
                 <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800"></div>
               </div>
@@ -135,13 +142,6 @@ const TimetableView = ({ timetable }: ViewProps) => {
                         <User className="w-4 h-4 text-zinc-400" />
 
                         {period.teacherId?.name}
-                      </div>
-
-                      {/* ROOM */}
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 text-sm font-medium">
-                        <MapPin className="w-4 h-4" />
-
-                        {period.room}
                       </div>
                     </div>
                   ))}

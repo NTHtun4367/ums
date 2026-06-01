@@ -77,6 +77,7 @@ export default function TimetableManager({
 }: ManagerProps) {
   const [selectedDay, setSelectedDay] = useState<DayType>("Monday");
   const [periods, setPeriods] = useState<TimetablePeriod[]>([]);
+  const [room, setRoom] = useState<string>("");
   const [isClearAlertOpen, setIsClearAlertOpen] = useState(false);
 
   const { data: subjectsData, isLoading: loadingSubjects } = useGetSubjectsQuery(
@@ -116,15 +117,16 @@ export default function TimetableManager({
   useEffect(() => {
     if (currentDayData) {
       setPeriods(currentDayData.periods);
+      setRoom(currentDayData.room || "");
     } else {
       setPeriods(
         DEFAULT_PERIODS.map((p) => ({
           ...p,
           subjectId: "",
           teacherId: "",
-          room: "",
         })),
       );
+      setRoom("");
     }
   }, [selectedDay, currentDayData]);
 
@@ -191,12 +193,16 @@ export default function TimetableManager({
     const filtered = periods.filter(
       (p) =>
         (typeof p.subjectId === "string" ? p.subjectId : p.subjectId?._id) &&
-        (typeof p.teacherId === "string" ? p.teacherId : p.teacherId?._id) &&
-        p.room,
+        (typeof p.teacherId === "string" ? p.teacherId : p.teacherId?._id),
     );
 
     if (!filtered.length) {
       toast.error("Add at least one complete period");
+      return;
+    }
+
+    if (!room.trim()) {
+      toast.error("Please enter a room number");
       return;
     }
 
@@ -212,14 +218,12 @@ export default function TimetableManager({
         periods: filtered.map((p) => ({
           subjectId:
             typeof p.subjectId === "string" ? p.subjectId : p.subjectId._id,
-
           teacherId:
             typeof p.teacherId === "string" ? p.teacherId : p.teacherId._id,
-
           startMinutes: p.startMinutes,
           endMinutes: p.endMinutes,
-          room: p.room,
         })),
+        room: room.trim(),
       }).unwrap();
 
       toast.success(`${selectedDay} schedule saved`);
@@ -257,11 +261,25 @@ export default function TimetableManager({
         ))}
       </div>
 
+      {/* Single Room Input for the entire day */}
+      <div className="space-y-1.5 bg-zinc-50 dark:bg-zinc-950/20 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800">
+        <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+          <MapPin className="w-3 h-3" /> Room
+        </label>
+        <Input
+          type="text"
+          placeholder="R-101"
+          value={room}
+          onChange={(e) => setRoom(e.target.value)}
+          className="rounded-lg h-10"
+        />
+      </div>
+
       <div className="space-y-4">
         {periods.map((period, index) => (
           <div
             key={index}
-            className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-zinc-50/50 dark:bg-zinc-950/20 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800"
+            className="grid grid-cols-1 md:grid-cols-11 gap-4 items-end bg-zinc-50/50 dark:bg-zinc-950/20 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800"
           >
             <div className="md:col-span-2">
               <TimePicker
@@ -306,19 +324,6 @@ export default function TimetableManager({
                 options={teacherOptions}
                 placeholder="Teacher"
                 loading={loadingTeachers}
-              />
-            </div>
-
-            <div className="md:col-span-1 space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-                <MapPin className="w-3 h-3" /> Room
-              </label>
-              <Input
-                type="text"
-                placeholder="R-101"
-                value={period.room}
-                onChange={(e) => updatePeriod(index, "room", e.target.value)}
-                className="rounded-lg h-10"
               />
             </div>
 

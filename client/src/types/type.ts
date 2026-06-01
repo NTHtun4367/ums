@@ -102,7 +102,7 @@ export interface TimetablePeriod {
   startMinutes: number;
   endMinutes: number;
 
-  room: string;
+  room?: string;
 }
 
 export interface Timetable {
@@ -117,6 +117,7 @@ export interface Timetable {
     | "Saturday"
     | "Sunday";
   periods: TimetablePeriod[];
+  room?: string;
 
   createdAt?: string;
   updatedAt?: string;
