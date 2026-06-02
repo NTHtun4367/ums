@@ -49,7 +49,7 @@ import {
   useMarkAttendanceMutation,
   useGetAttendanceByClassQuery,
 } from "@/store/slices/attendanceApi";
-import { useGetAcademicYearsQuery } from "@/store/slices/academicYearApi";
+import { useGetCurrentAcademicYearQuery } from "@/store/slices/academicYearApi";
 
 import type { RootState } from "@/store";
 import type {
@@ -65,31 +65,31 @@ const ATTENDANCE_STATUSES: {
   color: string;
   icon: any;
 }[] = [
-  {
-    label: "Present",
-    value: "present",
-    color: "text-emerald-600 bg-emerald-50 border-emerald-100",
-    icon: CheckCircle2,
-  },
-  {
-    label: "Absent",
-    value: "absent",
-    color: "text-red-600 bg-red-50 border-red-100",
-    icon: XCircle,
-  },
-  {
-    label: "Late",
-    value: "late",
-    color: "text-amber-600 bg-amber-50 border-amber-100",
-    icon: Clock,
-  },
-  {
-    label: "Excused",
-    value: "excused",
-    color: "text-blue-600 bg-blue-50 border-blue-100",
-    icon: AlertCircle,
-  },
-];
+    {
+      label: "Present",
+      value: "present",
+      color: "text-emerald-600 bg-emerald-50 border-emerald-100",
+      icon: CheckCircle2,
+    },
+    {
+      label: "Absent",
+      value: "absent",
+      color: "text-red-600 bg-red-50 border-red-100",
+      icon: XCircle,
+    },
+    {
+      label: "Late",
+      value: "late",
+      color: "text-amber-600 bg-amber-50 border-amber-100",
+      icon: Clock,
+    },
+    {
+      label: "Excused",
+      value: "excused",
+      color: "text-blue-600 bg-blue-50 border-blue-100",
+      icon: AlertCircle,
+    },
+  ];
 
 export default function AttendancePage() {
   const userInfo = useSelector((state: RootState) => state.auth.userInfo);
@@ -98,7 +98,6 @@ export default function AttendancePage() {
   const [selectedDept, setSelectedDept] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
-  const [selectedAY, setSelectedAY] = useState("");
   const [date, setDate] = useState<Date>(new Date());
   const [sessionNumber, setSessionNumber] = useState(1);
 
@@ -112,7 +111,7 @@ export default function AttendancePage() {
     page: 1,
     limit: 100,
   });
-  const { data: ayData } = useGetAcademicYearsQuery({ page: 1, limit: 10 });
+  const { data: currentAYData, isLoading: loadingCurrentAY } = useGetCurrentAcademicYearQuery();
 
   const { data: classData, isLoading: classesLoading } = useGetClassesQuery(
     { page: 1, limit: 100, departmentId: selectedDept },
@@ -209,7 +208,8 @@ export default function AttendancePage() {
   };
 
   const handleSave = async () => {
-    if (!selectedClass || !selectedSubject || !selectedAY) {
+    const currentAYId = currentAYData?.data?._id;
+    if (!selectedClass || !selectedSubject || !currentAYId) {
       toast.error("Please ensure all academic parameters are selected");
       return;
     }
@@ -225,7 +225,7 @@ export default function AttendancePage() {
           classId: selectedClass,
           subjectId: selectedSubject,
           teacherId: userInfo?._id,
-          academicYearId: selectedAY,
+          academicYearId: currentAYId,
           attendanceDate: format(date, "yyyy-MM-dd"),
           sessionNumber,
           status: record.status,
@@ -270,6 +270,7 @@ export default function AttendancePage() {
               isSaving ||
               !selectedClass ||
               !selectedSubject ||
+              !currentAYData?.data?._id ||
               (studentData?.users?.length || 0) === 0
             }
             className="rounded-xl flex gap-2"
@@ -280,13 +281,12 @@ export default function AttendancePage() {
         </div>
       </PageHeader>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="space-y-2">
           <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">
             Department
           </label>
           <CustomSelect
-            label="Dept"
             value={selectedDept}
             onChange={(val) => {
               setSelectedDept(val);
@@ -309,7 +309,6 @@ export default function AttendancePage() {
             Class
           </label>
           <CustomSelect
-            label="Class"
             value={selectedClass}
             onChange={(val) => {
               setSelectedClass(val);
@@ -332,7 +331,6 @@ export default function AttendancePage() {
             Subject
           </label>
           <CustomSelect
-            label="Subject"
             value={selectedSubject}
             onChange={setSelectedSubject}
             options={
@@ -349,24 +347,6 @@ export default function AttendancePage() {
 
         <div className="space-y-2">
           <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-            Academic Year
-          </label>
-          <CustomSelect
-            label="AY"
-            value={selectedAY}
-            onChange={setSelectedAY}
-            options={
-              ayData?.years?.map((y: any) => ({
-                label: y.name,
-                value: y._id,
-              })) || []
-            }
-            placeholder="Select Year"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">
             Session
           </label>
           <Input
@@ -374,7 +354,7 @@ export default function AttendancePage() {
             min={1}
             value={sessionNumber}
             onChange={(e) => setSessionNumber(Number(e.target.value))}
-            className="rounded-lg h-10"
+            className="rounded-full h-9 mt-3"
           />
         </div>
 
@@ -387,7 +367,7 @@ export default function AttendancePage() {
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-full h-10 justify-start text-left font-normal rounded-lg border-input",
+                  "w-full h-9 mt-3 justify-start text-left font-normal rounded-full border-input",
                   !date && "text-muted-foreground",
                 )}
               >
@@ -404,6 +384,31 @@ export default function AttendancePage() {
               />
             </PopoverContent>
           </Popover>
+        </div>
+      </div>
+
+      {/* Current Academic Year Info */}
+      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+            <CalendarIcon className="w-5 h-5 text-blue-600 dark:text-blue-300" />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100">Current Academic Year</h4>
+            {loadingCurrentAY ? (
+              <div className="text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5 animate-spin" /> Loading...
+              </div>
+            ) : currentAYData?.data?.name ? (
+              <p className="text-sm font-medium text-blue-700 dark:text-blue-200">
+                {currentAYData.data.name}
+              </p>
+            ) : (
+              <p className="text-sm text-red-600 dark:text-red-400">
+                No active academic year found! Please set one in Settings.
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

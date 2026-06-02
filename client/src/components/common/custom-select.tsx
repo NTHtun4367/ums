@@ -20,7 +20,7 @@ export interface SelectOption {
 
 // 1. Define separate props for the "Stand-alone" version (used in Filters)
 interface StandardSelectProps {
-  label: string;
+  label?: string;
   value?: string;
   onChange?: (value: string) => void;
   options: SelectOption[];
