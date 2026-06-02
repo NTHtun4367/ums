@@ -40,7 +40,7 @@ UMS is a modern full-stack university management platform built to streamline ac
 
 ## 🛠️ Tech Stack
 
-### Frontend (`/client`)
+### Frontend
 * **React 18** (Vite-powered)
 * **TypeScript**
 * **Redux Toolkit + RTK Query**
@@ -48,10 +48,9 @@ UMS is a modern full-stack university management platform built to streamline ac
 * **React Router**
 * **ESLint**
 
-### Backend (`/server`)
+### Backend
 * **Node.js** & **TypeScript** (`tsx` / `tsconfig`)
 * **Express.js**
-* **Inngest** (Asynchronous event-driven serverless functions)
 * **MongoDB** & **Mongoose**
 
 ### Additional Tools
