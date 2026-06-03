@@ -16,7 +16,8 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
+import { useState, useEffect } from "react";
 
 interface NavItem {
   title: string;
@@ -37,6 +38,37 @@ export function NavMain({
   items: NavItem[];
   userRole?: string;
 }) {
+  const location = useLocation();
+  const [openItems, setOpenItems] = useState<Set<string>>(new Set());
+
+  // Initialize open items based on current location
+  useEffect(() => {
+    const newOpenItems = new Set<string>();
+    items.forEach((item) => {
+      if (item.items) {
+        const hasActiveChild = item.items.some(
+          (subItem) => location.pathname === subItem.url
+        );
+        if (hasActiveChild) {
+          newOpenItems.add(item.title);
+        }
+      }
+    });
+    setOpenItems(newOpenItems);
+  }, [location.pathname, items]);
+
+  const toggleOpen = (title: string) => {
+    setOpenItems((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(title)) {
+        newSet.delete(title);
+      } else {
+        newSet.add(title);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -53,10 +85,15 @@ export function NavMain({
                 key={item.title}
                 asChild
                 className="group/collapsible"
+                open={openItems.has(item.title)}
+                onOpenChange={() => toggleOpen(item.title)}
               >
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip={item.title}>
+                    <SidebarMenuButton 
+                      tooltip={item.title} 
+                      isActive={item.url === location.pathname}
+                    >
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -66,7 +103,10 @@ export function NavMain({
                     <SidebarMenuSub>
                       {filteredSubItems.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild>
+                          <SidebarMenuSubButton 
+                            asChild 
+                            isActive={subItem.url === location.pathname}
+                          >
                             <Link to={subItem.url}>
                               <span>{subItem.title}</span>
                             </Link>
@@ -82,7 +122,11 @@ export function NavMain({
 
           return (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild tooltip={item.title}>
+              <SidebarMenuButton 
+                asChild 
+                tooltip={item.title} 
+                isActive={item.url === location.pathname}
+              >
                 <Link to={item.url}>
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>

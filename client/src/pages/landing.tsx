@@ -4,10 +4,6 @@ import {
   Building2, 
   GraduationCap, 
   Megaphone,
-  MapPin,
-  Phone,
-  Mail,
-  ChevronDown,
   Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,12 +16,10 @@ import {
   useGetDepartmentsQuery 
 } from "@/store/slices/departmentApi";
 import { format } from "date-fns";
-
-import { useSelector } from "react-redux";
-import type { RootState } from "@/store";
+import { PublicNavbar } from "@/components/common/PublicNavbar";
+import { PublicFooter } from "@/components/common/PublicFooter";
 
 export default function LandingPage() {
-  const { userInfo } = useSelector((state: RootState) => state.auth);
   const { data: announcementData } = useGetAnnouncementsQuery();
   const { data: deptData } = useGetDepartmentsQuery({ page: 1, limit: 100 });
 
@@ -35,68 +29,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-20 items-center">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-primary rounded-xl">
-                <GraduationCap className="w-8 h-8 text-white" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xl font-bold tracking-tight text-slate-900 leading-none">ASTON</span>
-                <span className="text-[10px] font-medium text-primary tracking-widest uppercase">University</span>
-              </div>
-            </div>
-
-            <div className="hidden md:flex items-center gap-8">
-              <Link to="/" className="text-sm font-semibold text-primary">Home</Link>
-              <Link to="/about" className="text-sm font-medium text-slate-600 hover:text-primary transition-colors">About</Link>
-              <div className="group relative">
-                <button className="flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-primary transition-colors">
-                  Departments <ChevronDown className="w-4 h-4" />
-                </button>
-                <div className="absolute top-full -left-4 w-64 pt-4 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-200">
-                  <div className="bg-white rounded-2xl shadow-xl border p-2 grid gap-1">
-                    {departments.slice(0, 6).map((dept) => (
-                      <Link 
-                        key={dept._id} 
-                        to={`/departments/${dept._id}`} 
-                        className="p-3 rounded-xl hover:bg-slate-50 transition-colors text-sm font-medium text-slate-700"
-                      >
-                        {dept.name}
-                      </Link>
-                    ))}
-                    <div className="border-t mt-1 pt-1">
-                      <Link to="#" className="p-3 block text-center text-xs font-bold text-primary hover:underline">
-                        View All Departments
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <Link to="/admissions" className="text-sm font-medium text-slate-600 hover:text-primary transition-colors">Admissions</Link>
-              <Link to="/campus-life" className="text-sm font-medium text-slate-600 hover:text-primary transition-colors">Campus Life</Link>
-            </div>
-
-            <div className="flex items-center gap-4">
-              {userInfo ? (
-                <Link to="/app">
-                  <Button className="rounded-xl font-semibold shadow-lg shadow-primary/20">Go to Dashboard</Button>
-                </Link>
-              ) : (
-                <>
-                  <Link to="/login">
-                    <Button variant="ghost" className="rounded-xl font-semibold">Sign In</Button>
-                  </Link>
-                  <Link to="/login">
-                    <Button className="rounded-xl font-semibold shadow-lg shadow-primary/20">Apply Now</Button>
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      <PublicNavbar />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-20 pb-32">
@@ -241,7 +174,7 @@ export default function LandingPage() {
                 key={dept._id} 
                 className="group p-8 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-primary/50 transition-all duration-300"
               >
-                <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+                <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
                   <Building2 className="w-7 h-7 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold mb-3">{dept.name}</h3>
@@ -266,7 +199,7 @@ export default function LandingPage() {
       {/* Call to Action */}
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-primary rounded-[3rem] p-12 md:p-20 relative overflow-hidden shadow-2xl shadow-primary/40">
+          <div className="bg-primary rounded-[3rem] p-12 md:p-20 relative overflow-hidden shadow-xl shadow-primary/40">
             <div className="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none">
               <Globe className="w-full h-full scale-150 rotate-12" />
             </div>
@@ -290,73 +223,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-50 pt-24 pb-12 border-t">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
-            <div className="col-span-1 md:col-span-1">
-              <div className="flex items-center gap-2 mb-8">
-                <div className="p-1.5 bg-primary rounded-lg">
-                  <GraduationCap className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-lg font-bold tracking-tight text-slate-900 leading-none">ASTON</span>
-                  <span className="text-[8px] font-medium text-primary tracking-widest uppercase">University</span>
-                </div>
-              </div>
-              <p className="text-slate-500 text-sm leading-relaxed mb-8">
-                Excellence in education and research. Preparing students for a global future since 1966.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-slate-900 mb-8 uppercase tracking-widest text-xs">Quick Links</h4>
-              <ul className="grid gap-4">
-                <li><Link to="/about" className="text-slate-500 hover:text-primary text-sm font-medium transition-colors">About Us</Link></li>
-                <li><Link to="/admissions" className="text-slate-500 hover:text-primary text-sm font-medium transition-colors">Admissions</Link></li>
-                <li><Link to="/campus-life" className="text-slate-500 hover:text-primary text-sm font-medium transition-colors">Campus Life</Link></li>
-                <li><Link to="/" className="text-slate-500 hover:text-primary text-sm font-medium transition-colors">Home</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-slate-900 mb-8 uppercase tracking-widest text-xs">Campus</h4>
-              <ul className="grid gap-4">
-                <li><Link to="/campus-life" className="text-slate-500 hover:text-primary text-sm font-medium transition-colors">Student Life</Link></li>
-                <li><Link to="/campus-life" className="text-slate-500 hover:text-primary text-sm font-medium transition-colors">Accommodation</Link></li>
-                <li><Link to="/campus-life" className="text-slate-500 hover:text-primary text-sm font-medium transition-colors">Sports & Wellness</Link></li>
-                <li><Link to="/admissions" className="text-slate-500 hover:text-primary text-sm font-medium transition-colors">Careers</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-slate-900 mb-8 uppercase tracking-widest text-xs">Contact Us</h4>
-              <ul className="grid gap-4">
-                <li className="flex gap-3 text-slate-500 text-sm font-medium">
-                  <MapPin className="w-5 h-5 text-primary shrink-0" />
-                  Aston Triangle, Birmingham, B4 7ET, UK
-                </li>
-                <li className="flex gap-3 text-slate-500 text-sm font-medium">
-                  <Phone className="w-5 h-5 text-primary shrink-0" />
-                  +44 (0)121 204 3000
-                </li>
-                <li className="flex gap-3 text-slate-500 text-sm font-medium">
-                  <Mail className="w-5 h-5 text-primary shrink-0" />
-                  hello@aston.ac.uk
-                </li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="pt-12 border-t flex flex-col md:flex-row justify-between items-center gap-6 text-slate-400 text-xs font-bold uppercase tracking-widest">
-            <p>&copy; 2026 Aston University. All rights reserved.</p>
-            <div className="flex gap-8">
-              <Link to="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
-              <Link to="#" className="hover:text-primary transition-colors">Terms of Service</Link>
-              <Link to="#" className="hover:text-primary transition-colors">Cookie Settings</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

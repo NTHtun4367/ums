@@ -1,45 +1,21 @@
-import { Link } from "react-router";
 import { 
-  ArrowLeft, 
-  GraduationCap, 
   CheckCircle, 
   Calendar, 
   FileText, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  ArrowRight,
   Users,
-  BookOpen
+  ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PublicNavbar } from "@/components/common/PublicNavbar";
+import { PublicFooter } from "@/components/common/PublicFooter";
 
 export default function AdmissionsPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-20 items-center">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="p-2 bg-primary rounded-xl">
-                <GraduationCap className="w-8 h-8 text-white" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xl font-bold tracking-tight text-slate-900 leading-none">ASTON</span>
-                <span className="text-[10px] font-medium text-primary tracking-widest uppercase">University</span>
-              </div>
-            </Link>
-            <Link to="/">
-              <Button variant="ghost" className="rounded-xl flex gap-2">
-                <ArrowLeft className="w-4 h-4" /> Back to Home
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <PublicNavbar />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-20 pb-24 bg-primary">
@@ -189,54 +165,7 @@ export default function AdmissionsPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-50 pt-24 pb-12 border-t">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
-            <div className="col-span-1 md:col-span-1">
-              <div className="flex items-center gap-2 mb-8">
-                <div className="p-1.5 bg-primary rounded-lg">
-                  <GraduationCap className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-lg font-bold tracking-tight text-slate-900 leading-none">ASTON</span>
-                  <span className="text-[8px] font-medium text-primary tracking-widest uppercase">University</span>
-                </div>
-              </div>
-              <p className="text-slate-500 text-sm leading-relaxed mb-8">
-                Excellence in education and research. Preparing students for a global future since 1966.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-slate-900 mb-8 uppercase tracking-widest text-xs">Quick Links</h4>
-              <ul className="grid gap-4">
-                <li><Link to="/about" className="text-slate-500 hover:text-primary text-sm font-medium transition-colors">About Us</Link></li>
-                <li><Link to="/admissions" className="text-slate-500 hover:text-primary text-sm font-medium transition-colors">Admissions</Link></li>
-                <li><Link to="/campus-life" className="text-slate-500 hover:text-primary text-sm font-medium transition-colors">Campus Life</Link></li>
-                <li><Link to="/" className="text-slate-500 hover:text-primary text-sm font-medium transition-colors">Home</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-slate-900 mb-8 uppercase tracking-widest text-xs">Contact Admissions</h4>
-              <ul className="grid gap-4">
-                <li className="flex gap-3 text-slate-500 text-sm font-medium">
-                  <Mail className="w-5 h-5 text-primary shrink-0" />
-                  admissions@aston.ac.uk
-                </li>
-                <li className="flex gap-3 text-slate-500 text-sm font-medium">
-                  <Phone className="w-5 h-5 text-primary shrink-0" />
-                  +44 (0)121 204 3001
-                </li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="pt-12 border-t flex flex-col md:flex-row justify-between items-center gap-6 text-slate-400 text-xs font-bold uppercase tracking-widest">
-            <p>&copy; 2026 Aston University. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
